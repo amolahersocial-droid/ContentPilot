@@ -1,41 +1,23 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Crown, Loader2 } from "lucide-react";
+import { Crown } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
-  const { toast } = useToast();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await login(username, password);
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-      });
+  useEffect(() => {
+    if (user) {
       setLocation("/dashboard");
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
+  }, [user, setLocation]);
+
+  const handleGoogleLogin = () => {
+    window.location.href = "/api/login";
   };
 
   return (
@@ -47,64 +29,30 @@ export default function Login() {
               <Crown className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to SEO Content SaaS</CardTitle>
           <CardDescription>
-            Sign in to your SEO Content SaaS account
+            Sign in with your Google account to continue
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                data-testid="input-username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                data-testid="input-password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-              data-testid="button-login"
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign in
-            </Button>
-            <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{" "}
-              <Button
-                type="button"
-                variant="link"
-                className="p-0 h-auto font-normal"
-                onClick={() => setLocation("/register")}
-                data-testid="link-register"
-              >
-                Create account
-              </Button>
-            </div>
-          </CardFooter>
-        </form>
+        <CardContent className="space-y-4">
+          <div className="text-sm text-muted-foreground text-center">
+            Automated SEO content generation and publishing for WordPress and Shopify sites.
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button
+            type="button"
+            className="w-full gap-2"
+            onClick={handleGoogleLogin}
+            data-testid="button-google-login"
+          >
+            <SiGoogle className="h-4 w-4" />
+            Sign in with Google
+          </Button>
+          <div className="text-xs text-center text-muted-foreground">
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );
