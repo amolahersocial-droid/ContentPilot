@@ -5,7 +5,8 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Mail, Send, TrendingUp, Users, Settings } from "lucide-react";
+import { Plus, Mail, Send, TrendingUp, Users, Settings, Eye } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,7 @@ export default function Outreach() {
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
   const [showSmtpDialog, setShowSmtpDialog] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const [viewEmailHistory, setViewEmailHistory] = useState<string | null>(null);
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<OutreachCampaign[]>({
     queryKey: ["/api/outreach/campaigns"],
@@ -53,6 +55,11 @@ export default function Outreach() {
   const { data: smtpCredentials = [] } = useQuery<SmtpCredential[]>({
     queryKey: ["/api/outreach/smtp"],
     enabled: user?.subscriptionPlan === "paid",
+  });
+
+  const { data: campaignDetails } = useQuery<any>({
+    queryKey: ["/api/outreach/campaigns", viewEmailHistory],
+    enabled: !!viewEmailHistory,
   });
 
   const createCampaignMutation = useMutation({
@@ -260,8 +267,7 @@ export default function Outreach() {
             {campaigns.map((campaign) => (
               <Card
                 key={campaign.id}
-                className="cursor-pointer hover-elevate"
-                onClick={() => setSelectedCampaign(campaign.id)}
+                className="hover-elevate"
                 data-testid={`card-campaign-${campaign.id}`}
               >
                 <CardHeader>
@@ -296,6 +302,27 @@ export default function Outreach() {
                       <span className="font-medium">{campaign.responses}</span>
                     </div>
                   </div>
+                  <div className="mt-4 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setViewEmailHistory(campaign.id)}
+                      data-testid={`button-view-emails-${campaign.id}`}
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-2" />
+                      View Emails
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedCampaign(campaign.id)}
+                      data-testid={`button-manage-${campaign.id}`}
+                    >
+                      Manage
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -316,6 +343,62 @@ export default function Outreach() {
         onSubmit={(data) => createSmtpMutation.mutate(data)}
         isPending={createSmtpMutation.isPending}
       />
+
+      <Dialog open={!!viewEmailHistory} onOpenChange={() => setViewEmailHistory(null)}>
+        <DialogContent className="max-w-5xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Email History</DialogTitle>
+            <DialogDescription>
+              Sent emails for this campaign
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto">
+            {campaignDetails?.emails && campaignDetails.emails.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Sent</TableHead>
+                    <TableHead>Opened</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaignDetails.emails.map((email: any) => (
+                    <TableRow key={email.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{email.contactName || "Unknown"}</div>
+                          <div className="text-xs text-muted-foreground">{email.contactEmail}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">{email.subject}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={email.status === "sent" ? "default" : email.status === "opened" ? "secondary" : "outline"}
+                        >
+                          {email.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {email.sentAt ? new Date(email.sentAt).toLocaleDateString() : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {email.openedAt ? new Date(email.openedAt).toLocaleDateString() : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No emails sent yet for this campaign
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -524,6 +524,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/posts/:id", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const post = await storage.getPostById(req.params.id);
+      if (!post || post.userId !== req.user.id) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const updated = await storage.updatePost(req.params.id, req.body);
+      return res.json(updated);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
   app.delete("/api/posts/:id", requireAuth, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
