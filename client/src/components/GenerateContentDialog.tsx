@@ -50,15 +50,48 @@ export function GenerateContentDialog({ open, onOpenChange }: GenerateContentDia
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       toast({
         title: "Content generation started!",
-        description: "Your content is being generated. This may take a few minutes.",
+        description: "Your content is being generated. Refresh the page to see updates.",
       });
       onOpenChange(false);
       setSiteId("");
       setKeywordId("");
+      
+      // Poll for job completion
+      if (data.jobId) {
+        const pollInterval = setInterval(async () => {
+          try {
+            const jobRes = await apiRequest("GET", `/api/jobs/${data.jobId}`, {});
+            if (jobRes.ok) {
+              const jobData = await jobRes.json();
+              if (jobData.state === "completed" || jobData.state === "failed") {
+                clearInterval(pollInterval);
+                queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+                if (jobData.state === "completed") {
+                  toast({
+                    title: "Content generated!",
+                    description: "Your SEO-optimized content is ready.",
+                  });
+                } else {
+                  toast({
+                    title: "Generation failed",
+                    description: jobData.error || "Content generation encountered an error.",
+                    variant: "destructive",
+                  });
+                }
+              }
+            }
+          } catch (error) {
+            clearInterval(pollInterval);
+          }
+        }, 3000); // Poll every 3 seconds
+        
+        // Clear interval after 5 minutes max
+        setTimeout(() => clearInterval(pollInterval), 300000);
+      }
     },
     onError: (error: any) => {
       toast({
