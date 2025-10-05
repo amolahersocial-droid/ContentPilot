@@ -8,6 +8,8 @@ import { ShopifyService } from "./services/shopify";
 // Initialize Redis connection
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
+console.log(`🔴 Connecting to Redis at: ${REDIS_URL}`);
+
 // Create queues
 export const contentGenerationQueue = new Queue("content-generation", REDIS_URL, {
   defaultJobOptions: {
@@ -38,6 +40,25 @@ export const scheduledPostQueue = new Queue("scheduled-posts", REDIS_URL, {
     attempts: 3,
     removeOnComplete: true,
   },
+});
+
+// Add error handlers for all queues
+[contentGenerationQueue, publishingQueue, scheduledPostQueue].forEach(queue => {
+  queue.on('error', (error) => {
+    console.error(`❌ Queue error in ${queue.name}:`, error.message);
+  });
+  
+  queue.on('failed', (job, error) => {
+    console.error(`❌ Job failed in ${queue.name}:`, {
+      jobId: job.id,
+      error: error.message,
+      data: job.data
+    });
+  });
+  
+  queue.on('completed', (job) => {
+    console.log(`✅ Job completed in ${queue.name}:`, job.id);
+  });
 });
 
 // Job data types

@@ -43,6 +43,9 @@ export class WordPressService {
 
   async createPost(post: WordPressPost): Promise<{ id: number; link: string }> {
     try {
+      console.log(`📝 Creating WordPress post at: ${this.baseUrl}/wp-json/wp/v2/posts`);
+      console.log(`🔑 Using username: ${this.credentials.username}`);
+      
       const response = await fetch(`${this.baseUrl}/wp-json/wp/v2/posts`, {
         method: "POST",
         headers: {
@@ -61,8 +64,10 @@ export class WordPressService {
         const error = await response.text();
         const statusCode = response.status;
         
+        console.error(`❌ WordPress API error (${statusCode}):`, error);
+        
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error("WordPress authentication failed. Please check your credentials.");
+          throw new Error(`WordPress authentication failed (${statusCode}). Check: 1) Application Password is correct, 2) Username is correct, 3) REST API is enabled. Error: ${error}`);
         }
         if (statusCode === 429) {
           throw new Error("Rate limit exceeded. Please try again later.");
