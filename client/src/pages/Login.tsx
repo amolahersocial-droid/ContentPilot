@@ -1,16 +1,48 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMode } from "@/contexts/ModeContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Crown, Loader2 } from "lucide-react";
-import { SiGoogle, SiShopify } from "react-icons/si";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Crown, Loader2, Lock, Mail, User } from "lucide-react";
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const { isShopifyMode } = useMode();
+  const { toast } = useToast();
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { username: "", password: "" },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { username: "", email: "", password: "" },
+  });
 
   // Check for shop parameter immediately on component mount
   useEffect(() => {
@@ -34,8 +66,71 @@ export default function Login() {
     }
   }, [user, setLocation]);
 
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/login";
+  const onLoginSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        // Trigger auth context to refetch user
+        window.location.href = "/dashboard";
+      } else {
+        const error = await response.json();
+        toast({ 
+          title: "Login failed", 
+          description: error.message || "Invalid credentials",
+          variant: "destructive" 
+        });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to login",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        toast({ title: "Account created!", description: "Registration successful" });
+        // Trigger auth context to refetch user
+        window.location.href = "/dashboard";
+      } else {
+        const error = await response.json();
+        toast({ 
+          title: "Registration failed", 
+          description: error.message || "Could not create account",
+          variant: "destructive" 
+        });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to register",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Show loading state while redirecting to Shopify
@@ -61,30 +156,201 @@ export default function Login() {
               <Crown className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to RankForge</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {isRegisterMode ? "Create Account" : "Welcome Back"}
+          </CardTitle>
           <CardDescription>
-            Sign in with your Replit account to continue
+            {isRegisterMode 
+              ? "Sign up to start generating SEO content" 
+              : "Sign in to your RankForge account"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Automated SEO content generation and publishing for your sites.
+          {isRegisterMode ? (
+            <Form {...registerForm}>
+              <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                <FormField
+                  control={registerForm.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            placeholder="johndoe" 
+                            className="pl-10"
+                            data-testid="input-username"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="email" 
+                            placeholder="john@example.com" 
+                            className="pl-10"
+                            data-testid="input-email"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={registerForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="password" 
+                            placeholder="••••••••" 
+                            className="pl-10"
+                            data-testid="input-password"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading}
+                  data-testid="button-register"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          ) : (
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <FormField
+                  control={loginForm.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            placeholder="Enter your username" 
+                            className="pl-10"
+                            data-testid="input-username"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={loginForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            {...field} 
+                            type="password" 
+                            placeholder="Enter your password" 
+                            className="pl-10"
+                            data-testid="input-password"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading}
+                  data-testid="button-login"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          )}
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                {isRegisterMode ? "Already have an account?" : "Don't have an account?"}
+              </span>
+            </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+
           <Button
             type="button"
-            className="w-full gap-2"
-            onClick={handleGoogleLogin}
-            data-testid="button-replit-login"
+            variant="ghost"
+            className="w-full"
+            onClick={() => {
+              setIsRegisterMode(!isRegisterMode);
+              loginForm.reset();
+              registerForm.reset();
+            }}
+            disabled={isLoading}
+            data-testid="button-toggle-mode"
           >
-            <Crown className="h-4 w-4" />
-            Continue with Replit
+            {isRegisterMode ? "Sign In" : "Create Account"}
           </Button>
+
           <div className="text-xs text-center text-muted-foreground">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            By {isRegisterMode ? "creating an account" : "signing in"}, you agree to our Terms of Service and Privacy Policy
           </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   );
