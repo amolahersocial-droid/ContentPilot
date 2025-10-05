@@ -1,0 +1,62 @@
+[MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+index-CcSQ1ysV.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+index-CcSQ1ysV.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-CcSQ1ysV.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-CcSQ1ysV.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+index-CcSQ1ysV.js:48 [QUERY CLIENT] ✅ Added shop parameter
+index-CcSQ1ysV.js:48 [QUERY FN] Making fetch
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+index-CcSQ1ysV.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-CcSQ1ysV.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: true, hasSessionShop: true, …}
+index-CcSQ1ysV.js:48 [MODE DETECTION] ✅ Shopify mode detected (session shop exists)
+index-CcSQ1ysV.js:48 [MODE PROVIDER] Updated global mode {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-CcSQ1ysV.js:48 [MODE PROVIDER] Shopify params {hasShop: true, hasHost: false, hasHmac: false, hasIdToken: false}
+index-CcSQ1ysV.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user?shop=test-store-techronyx.myshopify.com 401 (Unauthorized)
+(anonymous) @ index-CcSQ1ysV.js:48
+i @ index-CcSQ1ysV.js:48
+w @ index-CcSQ1ysV.js:48
+start @ index-CcSQ1ysV.js:48
+fetch @ index-CcSQ1ysV.js:48
+Qo @ index-CcSQ1ysV.js:48
+onSubscribe @ index-CcSQ1ysV.js:48
+subscribe @ index-CcSQ1ysV.js:48
+(anonymous) @ index-CcSQ1ysV.js:48
+mx @ index-CcSQ1ysV.js:38
+Vc @ index-CcSQ1ysV.js:40
+Oi @ index-CcSQ1ysV.js:40
+ng @ index-CcSQ1ysV.js:40
+vs @ index-CcSQ1ysV.js:38
+CC @ index-CcSQ1ysV.js:40
+ks @ index-CcSQ1ysV.js:40
+Qx @ index-CcSQ1ysV.js:40
+j @ index-CcSQ1ysV.js:25
+I @ index-CcSQ1ysV.js:25Understand this error
+index-CcSQ1ysV.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-CcSQ1ysV.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Redirecting to Shopify OAuth {hasShop: true}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Config received {hasApiKey: true}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] URL params {hasHost: false, hasShop: false, hasHmac: false, hasIdToken: false, hasEmbedded: false}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Retrieved host from sessionStorage {hasHost: false}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] ⚠️ No host parameter found - app may not be embedded
+i @ index-CcSQ1ysV.js:298
+await in i
+(anonymous) @ index-CcSQ1ysV.js:298
+Vc @ index-CcSQ1ysV.js:40
+Oi @ index-CcSQ1ysV.js:40
+ng @ index-CcSQ1ysV.js:40
+vs @ index-CcSQ1ysV.js:38
+CC @ index-CcSQ1ysV.js:40
+ks @ index-CcSQ1ysV.js:40
+Qx @ index-CcSQ1ysV.js:40
+j @ index-CcSQ1ysV.js:25
+I @ index-CcSQ1ysV.js:25Understand this warning
+[Report Only] Refused to frame 'https://accounts.shopify.com/' because an ancestor violates the following Content Security Policy directive: "frame-ancestors 'self'".
+Understand this error
+chrome-error://chromewebdata/:1 Refused to display 'https://accounts.shopify.com/' in a frame because it set 'X-Frame-Options' to 'deny'.Understand this error

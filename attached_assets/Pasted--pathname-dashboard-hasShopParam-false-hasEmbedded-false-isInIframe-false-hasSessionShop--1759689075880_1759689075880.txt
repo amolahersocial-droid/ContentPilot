@@ -1,0 +1,40 @@
+{pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: false, hasSessionShop: false, …}
+index-CcSQ1ysV.js:48 [MODE DETECTION] ✅ Standalone mode detected
+index-CcSQ1ysV.js:48 [MODE PROVIDER] Initial state {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Initializing {isShopifyMode: false, hasShop: false}
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-CcSQ1ysV.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-CcSQ1ysV.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'standalone', hasGlobalShop: false, willAddShopParam: false}
+index-CcSQ1ysV.js:48 [QUERY CLIENT] Standalone mode - no shop parameter added
+index-CcSQ1ysV.js:48 [QUERY FN] Making fetch
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: false}
+index-CcSQ1ysV.js:298 [SHOPIFY PROVIDER] Not in Shopify mode - skipping App Bridge init
+index-CcSQ1ysV.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-CcSQ1ysV.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: false, hasSessionShop: false, …}
+index-CcSQ1ysV.js:48 [MODE DETECTION] ✅ Standalone mode detected
+index-CcSQ1ysV.js:48 [MODE PROVIDER] Updated global mode {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+index-CcSQ1ysV.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user 401 (Unauthorized)
+(anonymous) @ index-CcSQ1ysV.js:48
+i @ index-CcSQ1ysV.js:48
+w @ index-CcSQ1ysV.js:48
+start @ index-CcSQ1ysV.js:48
+fetch @ index-CcSQ1ysV.js:48
+Qo @ index-CcSQ1ysV.js:48
+onSubscribe @ index-CcSQ1ysV.js:48
+subscribe @ index-CcSQ1ysV.js:48
+(anonymous) @ index-CcSQ1ysV.js:48
+mx @ index-CcSQ1ysV.js:38
+Vc @ index-CcSQ1ysV.js:40
+Oi @ index-CcSQ1ysV.js:40
+ng @ index-CcSQ1ysV.js:40
+vs @ index-CcSQ1ysV.js:38
+CC @ index-CcSQ1ysV.js:40
+ks @ index-CcSQ1ysV.js:40
+Qx @ index-CcSQ1ysV.js:40
+j @ index-CcSQ1ysV.js:25
+I @ index-CcSQ1ysV.js:25Understand this error
+index-CcSQ1ysV.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-CcSQ1ysV.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-CcSQ1ysV.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}

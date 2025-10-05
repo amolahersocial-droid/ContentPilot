@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useMode } from "./ModeContext";
 
 declare global {
@@ -7,6 +7,13 @@ declare global {
     AppBridge?: any;
   }
 }
+
+interface ShopifyContextType {
+  appBridgeReady: boolean;
+  redirectToAuth: (shop: string) => void;
+}
+
+const ShopifyContext = createContext<ShopifyContextType | null>(null);
 
 export function ShopifyProvider({ children }: { children: ReactNode }) {
   const { isShopifyMode, shop } = useMode();
@@ -150,5 +157,45 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
     initializeShopifyAppBridge();
   }, [isShopifyMode]);
 
-  return <>{children}</>;
+  // Redirect to Shopify OAuth using App Bridge (for embedded apps)
+  const redirectToAuth = (shop: string) => {
+    console.log("[SHOPIFY PROVIDER] redirectToAuth called", { shop, appBridgeReady });
+    
+    const authUrl = `/api/auth/shopify?shop=${shop}`;
+    
+    // If App Bridge is ready, use it for top-level redirect
+    if (window.shopify && appBridgeReady) {
+      console.log("[SHOPIFY PROVIDER] Using App Bridge Redirect for OAuth");
+      try {
+        // Use App Bridge to redirect - this performs a top-level navigation
+        window.shopify.window.redirect(authUrl);
+      } catch (error) {
+        console.error("[SHOPIFY PROVIDER] App Bridge redirect failed:", error);
+        // Fallback to regular redirect
+        window.top!.location.href = authUrl;
+      }
+    } else {
+      // Fallback: Try to redirect at top level (breaks out of iframe)
+      console.log("[SHOPIFY PROVIDER] App Bridge not ready - using top-level redirect");
+      if (window.top) {
+        window.top.location.href = authUrl;
+      } else {
+        window.location.href = authUrl;
+      }
+    }
+  };
+
+  return (
+    <ShopifyContext.Provider value={{ appBridgeReady, redirectToAuth }}>
+      {children}
+    </ShopifyContext.Provider>
+  );
+}
+
+export function useShopify() {
+  const context = useContext(ShopifyContext);
+  if (!context) {
+    throw new Error("useShopify must be used within ShopifyProvider");
+  }
+  return context;
 }
