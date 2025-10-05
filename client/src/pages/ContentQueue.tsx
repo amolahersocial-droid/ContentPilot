@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, FileText, Eye, Trash2, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, FileText, Eye, Trash2, Clock, CheckCircle2, XCircle, Edit } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DialogFooter } from "@/components/ui/dialog";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Post } from "@shared/schema";
@@ -15,6 +19,16 @@ export default function ContentQueue() {
   const { toast } = useToast();
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
+  const [editPost, setEditPost] = useState<Post | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    title: string;
+    content: string;
+    metaDescription: string;
+  }>({
+    title: "",
+    content: "",
+    metaDescription: "",
+  });
 
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
@@ -49,6 +63,39 @@ export default function ContentQueue() {
       });
     },
   });
+
+  const updatePostMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/posts/${id}`, data);
+      if (!res.ok) throw new Error("Failed to update post");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      setEditPost(null);
+      toast({
+        title: "Post updated",
+        description: "Your changes have been saved.",
+      });
+    },
+  });
+
+  const handleEditPost = (post: Post) => {
+    setEditPost(post);
+    setEditFormData({
+      title: post.title,
+      content: post.content || "",
+      metaDescription: post.metaDescription || "",
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editPost) return;
+    updatePostMutation.mutate({
+      id: editPost.id,
+      data: editFormData,
+    });
+  };
 
   const groupedPosts = {
     draft: posts?.filter((p) => p.status === "draft") || [],
@@ -126,16 +173,26 @@ export default function ContentQueue() {
             <Eye className="h-3.5 w-3.5" />
           </Button>
           {post.status === "draft" && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1"
-              onClick={() => publishPostMutation.mutate(post.id)}
-              disabled={publishPostMutation.isPending}
-              data-testid={`button-publish-${post.id}`}
-            >
-              Publish
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEditPost(post)}
+                data-testid={`button-edit-${post.id}`}
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => publishPostMutation.mutate(post.id)}
+                disabled={publishPostMutation.isPending}
+                data-testid={`button-publish-${post.id}`}
+              >
+                Publish
+              </Button>
+            </>
           )}
           <Button
             size="sm"
@@ -265,6 +322,58 @@ export default function ContentQueue() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editPost} onOpenChange={() => setEditPost(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                data-testid="input-edit-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-meta">Meta Description</Label>
+              <Textarea
+                id="edit-meta"
+                value={editFormData.metaDescription}
+                onChange={(e) => setEditFormData({ ...editFormData, metaDescription: e.target.value })}
+                rows={3}
+                data-testid="textarea-edit-meta"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-content">Content (HTML)</Label>
+              <Textarea
+                id="edit-content"
+                value={editFormData.content}
+                onChange={(e) => setEditFormData({ ...editFormData, content: e.target.value })}
+                rows={15}
+                className="font-mono text-sm"
+                data-testid="textarea-edit-content"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPost(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveEdit} 
+              disabled={updatePostMutation.isPending}
+              data-testid="button-save-edit"
+            >
+              {updatePostMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

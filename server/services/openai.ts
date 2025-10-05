@@ -58,7 +58,7 @@ export async function generateSEOContent(
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -71,7 +71,7 @@ export async function generateSEOContent(
         },
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     if (!response.choices || !response.choices[0]?.message?.content) {

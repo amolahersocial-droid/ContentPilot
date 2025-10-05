@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link2, Crown, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddProspectDialog } from "@/components/AddProspectDialog";
 import type { Backlink } from "@shared/schema";
 
@@ -21,6 +22,7 @@ export default function Backlinks() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [addProspectOpen, setAddProspectOpen] = useState(false);
+  const [selectedBacklink, setSelectedBacklink] = useState<Backlink | null>(null);
 
   const { data: backlinks, isLoading } = useQuery<Backlink[]>({
     queryKey: ["/api/backlinks"],
@@ -152,7 +154,12 @@ export default function Backlinks() {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="outline" data-testid={`button-view-${backlink.id}`}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => setSelectedBacklink(backlink)}
+                      data-testid={`button-view-${backlink.id}`}
+                    >
                       View
                     </Button>
                   </TableCell>
@@ -167,6 +174,81 @@ export default function Backlinks() {
         open={addProspectOpen}
         onOpenChange={setAddProspectOpen}
       />
+
+      <Dialog open={!!selectedBacklink} onOpenChange={() => setSelectedBacklink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedBacklink?.prospectName || "Backlink Details"}</DialogTitle>
+          </DialogHeader>
+          {selectedBacklink && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium">URL</p>
+                <a 
+                  href={selectedBacklink.prospectUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline"
+                >
+                  {selectedBacklink.prospectUrl}
+                </a>
+              </div>
+              {selectedBacklink.prospectEmail && (
+                <div>
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm text-muted-foreground">{selectedBacklink.prospectEmail}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium">Status</p>
+                <Badge variant="outline" className={getStatusColor(selectedBacklink.status)}>
+                  {selectedBacklink.status}
+                </Badge>
+              </div>
+              {selectedBacklink.outreachTemplate && (
+                <div>
+                  <p className="text-sm font-medium">Outreach Template</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {selectedBacklink.outreachTemplate}
+                  </p>
+                </div>
+              )}
+              {selectedBacklink.notes && (
+                <div>
+                  <p className="text-sm font-medium">Notes</p>
+                  <p className="text-sm text-muted-foreground">{selectedBacklink.notes}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {selectedBacklink.contactedAt && (
+                  <div>
+                    <p className="font-medium">Contacted</p>
+                    <p className="text-muted-foreground">
+                      {new Date(selectedBacklink.contactedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                {selectedBacklink.respondedAt && (
+                  <div>
+                    <p className="font-medium">Responded</p>
+                    <p className="text-muted-foreground">
+                      {new Date(selectedBacklink.respondedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                {selectedBacklink.confirmedAt && (
+                  <div>
+                    <p className="font-medium">Confirmed</p>
+                    <p className="text-muted-foreground">
+                      {new Date(selectedBacklink.confirmedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
