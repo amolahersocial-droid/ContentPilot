@@ -31,12 +31,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading 
   });
 
-  // Redirect to Shopify OAuth when unauthenticated in Shopify mode
+  // Handle authentication redirects
   useEffect(() => {
-    if (isShopifyMode && !user && !isLoading && shop) {
-      console.log("[AUTH PROVIDER] Redirecting to Shopify OAuth", { hasShop: !!shop });
-      // Use App Bridge redirect for embedded apps
-      redirectToAuth(shop);
+    if (!user && !isLoading) {
+      if (isShopifyMode && shop) {
+        // Shopify mode: redirect to Shopify OAuth
+        console.log("[AUTH PROVIDER] Redirecting to Shopify OAuth", { hasShop: !!shop });
+        redirectToAuth(shop);
+      } else if (!isShopifyMode && window.location.pathname !== '/') {
+        // Standalone mode: redirect to login page if not already there
+        console.log("[AUTH PROVIDER] Unauthenticated in standalone mode - redirecting to login");
+        window.location.href = '/';
+      }
     }
   }, [isShopifyMode, user, isLoading, shop, redirectToAuth]);
 
