@@ -1,6 +1,7 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { useMode } from "@/contexts/ModeContext";
 import type { User } from "@shared/schema";
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
+  const { isShopifyMode, shop } = useMode();
 
   console.log("[AUTH PROVIDER] Initializing AuthProvider");
 
@@ -26,6 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hasUser: !!user, 
     isLoading 
   });
+
+  // Redirect to Shopify OAuth when unauthenticated in Shopify mode
+  useEffect(() => {
+    if (isShopifyMode && !user && !isLoading && shop) {
+      console.log("[AUTH PROVIDER] Redirecting to Shopify OAuth", { hasShop: !!shop });
+      window.location.href = `/api/auth/shopify?shop=${shop}`;
+    }
+  }, [isShopifyMode, user, isLoading, shop]);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {

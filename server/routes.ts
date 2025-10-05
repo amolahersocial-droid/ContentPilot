@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import passport from "passport";
 import crypto from "crypto";
 import { storage } from "./storage";
-import { isAuthenticated as requireAuth, requireAdmin, requirePaidPlan, loadUser } from "./replitAuth";
+import { setupAuth, hashPassword, requireAuth, requireAdmin, requirePaidPlan } from "./auth";
 import { insertUserSchema, insertSiteSchema, insertKeywordSchema, insertPostSchema, insertBacklinkSchema } from "@shared/schema";
 import { generateSEOContent, generateImage, generateMultipleImages } from "./services/openai";
 import { validateSEO } from "./services/seo-validator";
@@ -43,7 +43,15 @@ import { shopifyBillingService } from "./services/shopify-billing";
 // Razorpay payment integration
 const RAZORPAY_PLAN_ID = process.env.RAZORPAY_PLAN_ID || "";
 
+// Load user middleware
+function loadUser(req: any, res: any, next: any) {
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Setup local auth (session + passport)
+  setupAuth(app);
   
   // ========================================
   // SHOPIFY OAUTH & APP ROUTES
@@ -359,31 +367,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Load user data from database for all authenticated requests
   app.use(loadUser);
 
-  // New Replit Auth endpoint - returns user from database
-  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+  // Get current authenticated user
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const sessionUser = req.user;
-      const userId = sessionUser?.claims?.sub || sessionUser?.id;
-      
-      if (!userId) {
+      // If not authenticated, return 401
+      if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      const userId = req.user.id;
       const dbUser = await storage.getUser(userId);
       
       if (!dbUser) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json(dbUser);
+      // Don't send password
+      const { password, ...userResponse } = dbUser;
+      res.json(userResponse);
     } catch (error: any) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // LEGACY: Old local auth routes (commented out - using Replit Auth now)
-  /*
+  // Local auth routes (email/password authentication)
   app.post("/api/auth/register", authRateLimiter, validate(registerValidation), async (req, res, next) => {
     try {
       const result = insertUserSchema.safeParse(req.body);
@@ -445,23 +453,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
-  app.post("/api/auth/logout", (req, res) => {
+  // Logout endpoint - use GET to match frontend expectation
+  app.get("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) return res.status(500).json({ message: "Logout failed" });
-      return res.json({ message: "Logged out successfully" });
+      req.session.destroy(() => {
+        res.json({ message: "Logged out successfully" });
+      });
     });
   });
-
-  app.get("/api/auth/me", (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    const userResponse = { ...req.user, password: undefined };
-    delete userResponse.password;
-    return res.json(userResponse);
-  });
-  */
-  // END LEGACY AUTH ROUTES
 
   app.patch("/api/users/settings", requireAuth, async (req, res) => {
     try {

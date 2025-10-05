@@ -2,7 +2,6 @@ import './env';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupAuth } from "./replitAuth";
 import { helmetConfig, sanitizeInput, apiRateLimiter } from "./middleware/security";
 import { startWorker, startScheduler } from "./worker";
 import { attachAppMode } from "./mode-detector";
@@ -58,10 +57,7 @@ app.use((req, res, next) => {
 
 // Initialize async components and start server
 (async () => {
-  // Setup Auth FIRST (supports both Replit Auth for standalone and Shopify OAuth)
-  await setupAuth(app);
-  
-  // Then register routes
+  // Register routes (includes local auth and Shopify OAuth)
   const server = await registerRoutes(app);
   
   // Start background job worker and scheduler
