@@ -84,18 +84,30 @@ export async function setupAuth(app: Express) {
 
   const domains = process.env.REPLIT_DOMAINS!.split(",");
   
-  // Also support localhost for development
+  // Also support localhost with common ports for development
   if (process.env.NODE_ENV === 'development') {
-    domains.push('localhost', '127.0.0.1', '0.0.0.0');
+    const port = process.env.PORT || '5000';
+    domains.push(
+      `localhost:${port}`,
+      `127.0.0.1:${port}`,
+      `0.0.0.0:${port}`,
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0'
+    );
   }
   
   for (const domain of domains) {
+    // Use http:// for localhost domains in development, https:// for production
+    const isLocalhost = domain.includes('localhost') || domain.includes('127.0.0.1') || domain.includes('0.0.0.0');
+    const protocol = isLocalhost && process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL: `${protocol}://${domain}/api/callback`,
       },
       verify
     );
@@ -106,14 +118,36 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use req.get('host') which includes port (e.g., localhost:5000)
+    const host = req.get('host') || req.hostname;
+    const strategyName = `replitauth:${host}`;
+    
+    // Check if strategy exists, fallback to hostname-only strategy
+    const strategy = passport._strategy(strategyName) || passport._strategy(`replitauth:${req.hostname}`);
+    
+    if (!strategy) {
+      return res.status(500).json({ message: "Authentication not configured" });
+    }
+    
+    passport.authenticate(strategy.name, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    // Use req.get('host') which includes port (e.g., localhost:5000)
+    const host = req.get('host') || req.hostname;
+    const strategyName = `replitauth:${host}`;
+    
+    // Check if strategy exists, fallback to hostname-only strategy
+    const strategy = passport._strategy(strategyName) || passport._strategy(`replitauth:${req.hostname}`);
+    
+    if (!strategy) {
+      return res.status(500).json({ message: "Authentication not configured" });
+    }
+    
+    passport.authenticate(strategy.name, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);

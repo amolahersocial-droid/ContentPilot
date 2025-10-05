@@ -38,24 +38,34 @@ function initializeGlobalMode(): { mode: AppMode; shop: string | null } {
     return { mode: "shopify", shop: shopParam };
   }
   
-  // Check if we're in an iframe with session shop (Shopify embedded navigation)
-  if (isInIframe && sessionShop) {
-    console.log("[MODE DETECTION] ✅ Shopify mode detected (iframe with session)");
+  // Check if we have a session shop (Shopify mode persists regardless of iframe)
+  // This handles hard navigation that may drop out of iframe
+  if (sessionShop) {
+    console.log("[MODE DETECTION] ✅ Shopify mode detected (session shop exists)");
     return { mode: "shopify", shop: sessionShop };
   }
   
-  // Check if embedded parameter with iframe
-  if (embedded === "1" && isInIframe && sessionShop) {
-    console.log("[MODE DETECTION] ✅ Shopify mode detected (embedded with session)");
-    return { mode: "shopify", shop: sessionShop };
+  // Check if embedded parameter indicates Shopify mode
+  if (embedded === "1" && isInIframe) {
+    const shop = sessionShop || params.get("shop");
+    if (shop) {
+      sessionStorage.setItem("shopify_shop", shop);
+      console.log("[MODE DETECTION] ✅ Shopify mode detected (embedded param)");
+      return { mode: "shopify", shop };
+    }
   }
   
-  // Standalone mode - clear any stale Shopify data
-  sessionStorage.removeItem("shopify_shop");
-  sessionStorage.removeItem("shopify_host");
-  sessionStorage.removeItem("shop");
+  // Standalone mode - only clear when we're certain (no shop param, no session, not in iframe)
+  if (!isInIframe && !sessionShop && !shopParam) {
+    sessionStorage.removeItem("shopify_shop");
+    sessionStorage.removeItem("shopify_host");
+    sessionStorage.removeItem("shop");
+    console.log("[MODE DETECTION] ✅ Standalone mode detected");
+    return { mode: "standalone", shop: null };
+  }
   
-  console.log("[MODE DETECTION] ✅ Standalone mode detected");
+  // Default to standalone if uncertain
+  console.log("[MODE DETECTION] ✅ Standalone mode (default)");
   return { mode: "standalone", shop: null };
 }
 
