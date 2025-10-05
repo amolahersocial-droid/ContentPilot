@@ -74,10 +74,16 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  const { user } = useAuth();
+  
   return (
     <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      <Route path="/login">
+        {() => user ? <Redirect to="/dashboard" /> : <Login />}
+      </Route>
+      <Route path="/register">
+        {() => user ? <Redirect to="/dashboard" /> : <Register />}
+      </Route>
       <Route path="/dashboard">
         {() => <ProtectedRoute component={Dashboard} />}
       </Route>
