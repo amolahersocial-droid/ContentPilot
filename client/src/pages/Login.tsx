@@ -29,14 +29,14 @@ export default function Login() {
               <Crown className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to SEO Content SaaS</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to RankForge</CardTitle>
           <CardDescription>
             Sign in with your Google account to continue
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground text-center">
-            Automated SEO content generation and publishing for WordPress and Shopify sites.
+            Automated SEO content generation and publishing for WordPress sites.
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">

@@ -5,8 +5,11 @@ import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./replitAuth";
 import { helmetConfig, sanitizeInput, apiRateLimiter } from "./middleware/security";
 import { startWorker, startScheduler } from "./worker";
+import { attachAppMode } from "./mode-detector";
 
 const app = express();
+
+console.log("🚀 Starting RankForge...");
 
 // Security middleware
 app.use(helmetConfig);
@@ -14,7 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(sanitizeInput);
 
-// Setup Replit Auth (includes session and passport initialization)
+// Attach app mode detector (Shopify vs Standalone)
+app.use(attachAppMode);
+
+// Setup Auth (supports both Replit Auth for standalone and Shopify OAuth)
 await setupAuth(app);
 
 // API rate limiting
@@ -77,6 +83,7 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
+    console.log(`🎉 RankForge is ready!`);
     log(`serving on port ${port}`);
   });
 })();
