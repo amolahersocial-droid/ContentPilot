@@ -22,7 +22,7 @@ export default function Login() {
     if (shop || (embedded === '1' && window.self !== window.top)) {
       const shopParam = shop || sessionStorage.getItem('shop');
       if (shopParam) {
-        window.location.href = `/api/shopify/auth?shop=${shopParam}`;
+        window.location.href = `/api/auth/shopify?shop=${shopParam}`;
         return;
       }
     }
