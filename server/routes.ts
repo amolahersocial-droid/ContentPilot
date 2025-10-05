@@ -283,6 +283,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/keywords/auto-generate/:siteId", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const site = await storage.getSiteById(req.params.siteId);
+      if (!site || site.userId !== req.user.id) {
+        return res.status(404).json({ message: "Site not found" });
+      }
+
+      if (!site.crawlData) {
+        return res.status(400).json({ message: "No crawl data available. Please crawl the site first." });
+      }
+
+      const { KeywordExtractor } = await import("./services/keyword-extractor");
+      const extractedKeywords = KeywordExtractor.extractFromCrawlData(site.crawlData);
+
+      // Create top keywords in database
+      const createdKeywords = [];
+      const limit = req.user.subscriptionPlan === "free" ? 10 : 30; // Free users get top 10, paid get top 30
+      
+      for (const kw of extractedKeywords.slice(0, limit)) {
+        // Check if keyword already exists for this user
+        const existing = await storage.getKeywordsByUserId(req.user.id);
+        const alreadyExists = existing.some(k => k.keyword.toLowerCase() === kw.keyword.toLowerCase());
+        
+        if (!alreadyExists) {
+          const created = await storage.createKeyword({
+            userId: req.user.id,
+            siteId: site.id,
+            keyword: kw.keyword,
+            searchVolume: null,
+            difficulty: null,
+            relevanceScore: kw.score,
+            overallScore: kw.score,
+            isPinned: false,
+          });
+          createdKeywords.push(created);
+        }
+      }
+
+      return res.json({
+        message: `Generated ${createdKeywords.length} keywords from crawled data`,
+        keywords: createdKeywords,
+        totalExtracted: extractedKeywords.length,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/keywords", requireAuth, validate(keywordValidation), async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });

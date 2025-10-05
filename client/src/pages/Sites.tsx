@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Globe, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, Globe, ExternalLink, RefreshCw, Trash2, Sparkles } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Site } from "@shared/schema";
@@ -51,6 +51,31 @@ export default function Sites() {
         description: "Site crawl has been initiated. This may take a few minutes.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/sites"] });
+    },
+  });
+
+  const autoGenerateKeywordsMutation = useMutation({
+    mutationFn: async (siteId: string) => {
+      const res = await apiRequest("POST", `/api/keywords/auto-generate/${siteId}`, {});
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to generate keywords");
+      }
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Keywords generated!",
+        description: `Created ${data.keywords.length} keywords from crawled data.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/keywords"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to generate keywords",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -135,6 +160,19 @@ export default function Sites() {
                   <p className="text-xs text-muted-foreground">
                     Last crawled: {new Date(site.lastCrawledAt).toLocaleDateString()}
                   </p>
+                )}
+                {site.crawlData && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => autoGenerateKeywordsMutation.mutate(site.id)}
+                    disabled={autoGenerateKeywordsMutation.isPending}
+                    data-testid={`button-auto-keywords-${site.id}`}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                    Auto-Generate Keywords
+                  </Button>
                 )}
                 <div className="flex gap-2 pt-2">
                   <Button

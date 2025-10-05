@@ -1,17 +1,89 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, LogOut, Shield, Zap } from "lucide-react";
+import { Crown, LogOut, Shield, Zap, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const createSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/subscriptions/create", {
+        planType: "paid",
+        amount: 1999, // ₹19.99 per month
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to create subscription");
+      }
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      // Initialize Razorpay checkout
+      const options = {
+        key: data.keyId,
+        subscription_id: data.subscriptionId,
+        name: "SEO Content SaaS",
+        description: "Paid Subscription Plan",
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await apiRequest("POST", "/api/subscriptions/verify", {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            
+            if (verifyRes.ok) {
+              toast({
+                title: "Subscription activated!",
+                description: "Welcome to the paid plan. Enjoy unlimited features!",
+              });
+              // Refresh the page to update user data
+              window.location.reload();
+            } else {
+              throw new Error("Payment verification failed");
+            }
+          } catch (error: any) {
+            toast({
+              title: "Payment verification failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            toast({
+              title: "Payment cancelled",
+              description: "You can upgrade anytime from settings.",
+            });
+          }
+        },
+        theme: {
+          color: "#8b5cf6",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to initiate payment",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -119,8 +191,16 @@ export default function Settings() {
                 Backlink helper with outreach tracking
               </li>
             </ul>
-            <Button className="w-full" data-testid="button-upgrade">
-              Upgrade Now
+            <Button 
+              className="w-full" 
+              data-testid="button-upgrade"
+              onClick={() => createSubscriptionMutation.mutate()}
+              disabled={createSubscriptionMutation.isPending}
+            >
+              {createSubscriptionMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Upgrade Now - ₹19.99/month
             </Button>
           </CardContent>
         </Card>
