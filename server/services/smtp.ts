@@ -171,7 +171,60 @@ export class SmtpService {
     }
   }
 
-  async verifyCredentials(credentialId: string): Promise<boolean> {
+  async verifyCredentials(
+    provider: "gmail" | "outlook" | "custom",
+    email: string,
+    password: string,
+    customHost?: string,
+    customPort?: number
+  ): Promise<boolean> {
+    try {
+      let transporter: Transporter;
+
+      if (provider === "gmail") {
+        transporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 465,
+          secure: true,
+          auth: {
+            user: email,
+            pass: password,
+          },
+        });
+      } else if (provider === "outlook") {
+        transporter = nodemailer.createTransport({
+          host: "smtp-mail.outlook.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: email,
+            pass: password,
+          },
+        });
+      } else {
+        if (!customHost || !customPort) {
+          throw new Error("Custom SMTP host and port are required");
+        }
+        transporter = nodemailer.createTransport({
+          host: customHost,
+          port: customPort,
+          secure: customPort === 465,
+          auth: {
+            user: email,
+            pass: password,
+          },
+        });
+      }
+
+      await transporter.verify();
+      return true;
+    } catch (error) {
+      console.error("SMTP verification error:", error);
+      return false;
+    }
+  }
+
+  async verifyStoredCredentials(credentialId: string): Promise<boolean> {
     try {
       const transporter = await this.createTransporter(credentialId);
       await transporter.verify();

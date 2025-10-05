@@ -342,7 +342,7 @@ export const outreachCampaigns = pgTable(
     name: text("name").notNull(),
     niche: text("niche").notNull(),
     tone: emailToneEnum("tone").notNull().default("professional"),
-    status: outreachCampaignStatusEnum("status").notNull().default("draft"),
+    status: outreachCampaignStatusEnum("status").notNull().default("active"),
     targetWebsiteCount: integer("target_website_count").notNull().default(50),
     emailsSent: integer("emails_sent").notNull().default(0),
     emailsOpened: integer("emails_opened").notNull().default(0),

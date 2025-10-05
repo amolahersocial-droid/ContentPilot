@@ -921,6 +921,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SMTP Credentials Routes
+  app.post("/api/outreach/smtp/verify", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      const { provider, email, password, smtpHost, smtpPort } = req.body;
+      
+      const isValid = await smtpService.verifyCredentials(
+        provider,
+        email,
+        password,
+        smtpHost,
+        smtpPort
+      );
+      
+      if (isValid) {
+        return res.json({ message: "SMTP credentials verified successfully" });
+      } else {
+        return res.status(400).json({ message: "SMTP verification failed. Please check your credentials." });
+      }
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+
   app.post("/api/outreach/smtp", requireAuth, requirePaidPlan, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });

@@ -485,6 +485,8 @@ function SmtpSetupDialog({
   onSubmit: (data: any) => void;
   isPending: boolean;
 }) {
+  const { toast } = useToast();
+  const [isVerifying, setIsVerifying] = useState(false);
   const [formData, setFormData] = useState({
     provider: "gmail",
     email: "",
@@ -492,6 +494,34 @@ function SmtpSetupDialog({
     smtpHost: "",
     smtpPort: 587,
   });
+
+  const handleTestConnection = async () => {
+    setIsVerifying(true);
+    try {
+      const response = await apiRequest("POST", "/api/outreach/smtp/verify", formData);
+      if (response.ok) {
+        toast({
+          title: "Connection successful!",
+          description: "Your SMTP credentials are valid.",
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Connection failed",
+          description: error.message || "Please check your credentials.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Connection failed",
+        description: error.message || "Unable to verify credentials.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -587,6 +617,17 @@ function SmtpSetupDialog({
               </div>
             </>
           )}
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleTestConnection}
+            disabled={isVerifying || !formData.email || !formData.password}
+            className="w-full"
+            data-testid="button-test-connection"
+          >
+            {isVerifying ? "Testing..." : "Test Connection"}
+          </Button>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
