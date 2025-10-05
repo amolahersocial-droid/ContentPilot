@@ -27,11 +27,169 @@ import {
   keywordValidation,
   backlinkValidation,
 } from "./middleware/security";
+import { 
+  verifyHmac, 
+  getInstallUrl, 
+  exchangeAccessToken, 
+  getShopInfo,
+  requireShopifyAuth 
+} from "./shopify-auth";
+import { db } from "./db";
+import { shops } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { isShopifyMode } from "./mode-detector";
+import { shopifyBillingService } from "./services/shopify-billing";
 
 // Razorpay payment integration
 const RAZORPAY_PLAN_ID = process.env.RAZORPAY_PLAN_ID || "";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // ========================================
+  // SHOPIFY OAUTH & APP ROUTES
+  // ========================================
+  
+  // Shopify app installation entry point
+  app.get("/api/auth/shopify", async (req, res) => {
+    try {
+      const shop = req.query.shop as string;
+      
+      if (!shop) {
+        return res.status(400).json({ message: "Shop parameter required" });
+      }
+
+      // Validate shop domain
+      if (!shop.endsWith('.myshopify.com')) {
+        return res.status(400).json({ message: "Invalid shop domain" });
+      }
+
+      const state = crypto.randomBytes(16).toString('hex');
+      
+      // Store state in session for verification
+      if (req.session) {
+        (req.session as any).shopifyState = state;
+        (req.session as any).shopifyShop = shop;
+      }
+
+      const installUrl = getInstallUrl(shop, state);
+      res.redirect(installUrl);
+    } catch (error: any) {
+      console.error("Shopify install error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Shopify OAuth callback
+  app.get("/api/auth/shopify/callback", async (req, res) => {
+    try {
+      const { code, hmac, shop, state } = req.query;
+
+      // Verify HMAC
+      if (!verifyHmac(req.query)) {
+        return res.status(403).json({ message: "HMAC verification failed" });
+      }
+
+      // Verify state
+      const sessionState = req.session && (req.session as any).shopifyState;
+      if (!sessionState || sessionState !== state) {
+        return res.status(403).json({ message: "State verification failed" });
+      }
+
+      // Exchange code for access token
+      const { access_token, scope } = await exchangeAccessToken(
+        shop as string,
+        code as string
+      );
+
+      // Get shop information
+      const shopInfo = await getShopInfo(shop as string, access_token);
+
+      // Store or update shop in database
+      const [shopRecord] = await db
+        .insert(shops)
+        .values({
+          shop: shop as string,
+          shopName: shopInfo.name,
+          shopOwner: shopInfo.shop_owner,
+          email: shopInfo.email,
+          accessToken: access_token,
+          scope,
+          isActive: true,
+        })
+        .onConflictDoUpdate({
+          target: shops.shop,
+          set: {
+            accessToken: access_token,
+            scope,
+            shopName: shopInfo.name,
+            shopOwner: shopInfo.shop_owner,
+            email: shopInfo.email,
+            isActive: true,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+
+      // Store shop in session
+      if (req.session) {
+        (req.session as any).shopifyShop = shop;
+        (req.session as any).shopifyShopId = shopRecord.id;
+      }
+
+      // Redirect to embedded app
+      const host = req.query.host;
+      const redirectUrl = `/?shop=${shop}&host=${host}&embedded=1`;
+      res.redirect(redirectUrl);
+    } catch (error: any) {
+      console.error("Shopify callback error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Shopify webhooks
+  app.post("/api/webhooks/shopify/app/uninstalled", async (req, res) => {
+    try {
+      // Verify webhook (Shopify sends HMAC in header)
+      const shop = req.body.shop_domain;
+      
+      // Mark shop as inactive
+      await db
+        .update(shops)
+        .set({
+          isActive: false,
+          uninstalledAt: new Date(),
+        })
+        .where(eq(shops.shop, shop));
+
+      res.status(200).send("OK");
+    } catch (error: any) {
+      console.error("Webhook error:", error);
+      res.status(500).send("Error");
+    }
+  });
+
+  // GDPR webhooks
+  app.post("/api/webhooks/shopify/customers/data_request", async (req, res) => {
+    // Return customer data
+    res.status(200).send("OK");
+  });
+
+  app.post("/api/webhooks/shopify/customers/redact", async (req, res) => {
+    // Delete customer data
+    res.status(200).send("OK");
+  });
+
+  app.post("/api/webhooks/shopify/shop/redact", async (req, res) => {
+    // Delete all shop data
+    const shop = req.body.shop_domain;
+    await db.delete(shops).where(eq(shops.shop, shop));
+    res.status(200).send("OK");
+  });
+
+  // ========================================
+  // END SHOPIFY ROUTES
+  // ========================================
+
   // Load user data from database for all authenticated requests
   app.use(loadUser);
 
