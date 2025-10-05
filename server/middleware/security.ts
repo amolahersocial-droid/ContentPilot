@@ -3,13 +3,14 @@ import helmet from "helmet";
 import { body, validationResult } from "express-validator";
 import type { Request, Response, NextFunction } from "express";
 
-// Rate limiting configurations
+// Rate limiting configurations - configured for proxy deployment (Replit)
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
   message: "Too many authentication attempts. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation
 });
 
 export const apiRateLimiter = rateLimit({
@@ -18,6 +19,7 @@ export const apiRateLimiter = rateLimit({
   message: "Too many requests. Please slow down.",
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation
 });
 
 export const contentGenerationRateLimiter = rateLimit({
@@ -26,6 +28,7 @@ export const contentGenerationRateLimiter = rateLimit({
   message: "Content generation limit reached. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation
   skip: (req) => {
     // Skip rate limit for paid users
     return req.user?.subscriptionPlan === "paid";

@@ -594,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Site not found" });
       }
 
-      let prospects = [];
+      let prospects: any[] = [];
       
       // Try to identify from crawl data first
       if (site.crawlData) {

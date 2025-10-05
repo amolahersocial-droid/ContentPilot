@@ -7,6 +7,9 @@ import { startScheduler } from "./queue";
 
 const app = express();
 
+// Trust proxy - required for Replit deployment and rate limiting
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmetConfig);
 app.use(express.json());
