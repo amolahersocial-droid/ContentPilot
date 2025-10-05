@@ -25,7 +25,7 @@ export class EmailOutreachService {
   }
 
   private initializeTransporter() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: this.config.smtpHost,
       port: this.config.smtpPort || 587,
       secure: false,
