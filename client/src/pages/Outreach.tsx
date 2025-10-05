@@ -582,9 +582,15 @@ function SmtpSetupDialog({
               data-testid="input-password"
             />
             {formData.provider === "gmail" && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Use an App Password, not your regular Gmail password
-              </p>
+              <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                <p className="font-medium">Gmail App Password Setup:</p>
+                <ol className="list-decimal list-inside space-y-0.5">
+                  <li>Go to Google Account → Security → 2-Step Verification (enable if not enabled)</li>
+                  <li>Go to Security → App passwords</li>
+                  <li>Create app password for "Mail" / "Other"</li>
+                  <li>Copy the 16-character password and paste above</li>
+                </ol>
+              </div>
             )}
           </div>
 
