@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, FileText, Eye, Trash2, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 export default function ContentQueue() {
   const { toast } = useToast();
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
@@ -115,6 +117,14 @@ export default function ContentQueue() {
           )}
         </div>
         <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPreviewPost(post)}
+            data-testid={`button-preview-${post.id}`}
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
           {post.status === "draft" && (
             <Button
               size="sm"
@@ -222,6 +232,41 @@ export default function ContentQueue() {
         open={generateDialogOpen}
         onOpenChange={setGenerateDialogOpen}
       />
+
+      <Dialog open={!!previewPost} onOpenChange={() => setPreviewPost(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{previewPost?.title || "Preview"}</DialogTitle>
+          </DialogHeader>
+          {previewPost && (
+            <div className="space-y-4">
+              {previewPost.metaDescription && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-sm font-medium mb-1">Meta Description</p>
+                  <p className="text-sm text-muted-foreground">{previewPost.metaDescription}</p>
+                </div>
+              )}
+              <div
+                className="prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: previewPost.content || "<p>No content generated yet</p>" }}
+              />
+              {Array.isArray(previewPost.images) && previewPost.images.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Images</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {previewPost.images.map((img: any, idx: number) => (
+                      <div key={idx} className="border rounded-lg p-2">
+                        <img src={img.url} alt={img.altText} className="w-full rounded" />
+                        <p className="text-xs text-muted-foreground mt-2">{img.altText}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
