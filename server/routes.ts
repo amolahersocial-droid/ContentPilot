@@ -727,6 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({
         subscriptionId: subscription.subscriptionId,
         shortUrl: subscription.shortUrl,
+        keyId: process.env.RAZORPAY_KEY_ID,
       });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
