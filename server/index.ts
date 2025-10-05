@@ -26,16 +26,6 @@ app.use(attachAppMode);
 // API rate limiting
 app.use("/api", apiRateLimiter);
 
-// Initialize async components and start server
-(async () => {
-  // Setup Auth (supports both Replit Auth for standalone and Shopify OAuth)
-  await setupAuth(app);
-
-  // Start background job worker and scheduler
-  startWorker();
-  startScheduler();
-})();
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -66,8 +56,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Initialize async components and start server
 (async () => {
+  // Setup Auth FIRST (supports both Replit Auth for standalone and Shopify OAuth)
+  await setupAuth(app);
+  
+  // Then register routes
   const server = await registerRoutes(app);
+  
+  // Start background job worker and scheduler
+  startWorker();
+  startScheduler();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

@@ -20,23 +20,34 @@ function initializeGlobalMode(): { mode: AppMode; shop: string | null } {
   const shopParam = params.get("shop");
   const embedded = params.get("embedded");
   const isInIframe = window.self !== window.top;
+  const sessionShop = sessionStorage.getItem("shopify_shop");
   
   console.log("[MODE DETECTION] Initializing mode detection", {
     pathname: window.location.pathname,
     hasShopParam: !!shopParam,
     hasEmbedded: !!embedded,
     isInIframe,
-    hasSessionShop: !!sessionStorage.getItem("shopify_shop"),
+    hasSessionShop: !!sessionShop,
     hasSessionHost: !!sessionStorage.getItem("shopify_host")
   });
   
-  if (shopParam || (embedded === "1" && isInIframe)) {
-    const shop = shopParam || sessionStorage.getItem("shopify_shop");
-    if (shop) {
-      sessionStorage.setItem("shopify_shop", shop);
-      console.log("[MODE DETECTION] ✅ Shopify mode detected");
-      return { mode: "shopify", shop };
-    }
+  // Check if we have shop param in URL
+  if (shopParam) {
+    sessionStorage.setItem("shopify_shop", shopParam);
+    console.log("[MODE DETECTION] ✅ Shopify mode detected (shop param in URL)");
+    return { mode: "shopify", shop: shopParam };
+  }
+  
+  // Check if we're in an iframe with session shop (Shopify embedded navigation)
+  if (isInIframe && sessionShop) {
+    console.log("[MODE DETECTION] ✅ Shopify mode detected (iframe with session)");
+    return { mode: "shopify", shop: sessionShop };
+  }
+  
+  // Check if embedded parameter with iframe
+  if (embedded === "1" && isInIframe && sessionShop) {
+    console.log("[MODE DETECTION] ✅ Shopify mode detected (embedded with session)");
+    return { mode: "shopify", shop: sessionShop };
   }
   
   // Standalone mode - clear any stale Shopify data
