@@ -1,0 +1,58 @@
+[MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+index-BDbUgeP4.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+index-BDbUgeP4.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+index-BDbUgeP4.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-BDbUgeP4.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-BDbUgeP4.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-BDbUgeP4.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+index-BDbUgeP4.js:48 [QUERY CLIENT] ✅ Added shop parameter
+index-BDbUgeP4.js:48 [QUERY FN] Making fetch
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+index-BDbUgeP4.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-BDbUgeP4.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: true, hasSessionShop: true, …}
+index-BDbUgeP4.js:48 [MODE DETECTION] ✅ Shopify mode detected (session shop exists)
+index-BDbUgeP4.js:48 [MODE PROVIDER] Updated global mode {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-BDbUgeP4.js:48 [MODE PROVIDER] Shopify params {hasShop: true, hasHost: false, hasHmac: false, hasIdToken: false}
+index-BDbUgeP4.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user?shop=test-store-techronyx.myshopify.com 401 (Unauthorized)
+(anonymous) @ index-BDbUgeP4.js:48
+i @ index-BDbUgeP4.js:48
+w @ index-BDbUgeP4.js:48
+start @ index-BDbUgeP4.js:48
+fetch @ index-BDbUgeP4.js:48
+Uo @ index-BDbUgeP4.js:48
+onSubscribe @ index-BDbUgeP4.js:48
+subscribe @ index-BDbUgeP4.js:48
+(anonymous) @ index-BDbUgeP4.js:48
+Kg @ index-BDbUgeP4.js:38
+yl @ index-BDbUgeP4.js:40
+Os @ index-BDbUgeP4.js:40
+fh @ index-BDbUgeP4.js:40
+Pr @ index-BDbUgeP4.js:38
+_j @ index-BDbUgeP4.js:40
+Ir @ index-BDbUgeP4.js:40
+Nv @ index-BDbUgeP4.js:40
+S @ index-BDbUgeP4.js:25
+D @ index-BDbUgeP4.js:25Understand this error
+index-BDbUgeP4.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-BDbUgeP4.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-BDbUgeP4.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-BDbUgeP4.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] Config received {hasApiKey: true}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] URL params {hasHost: false, hasShop: false, hasHmac: false, hasIdToken: false, hasEmbedded: false}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] Retrieved host from sessionStorage {hasHost: false}
+index-BDbUgeP4.js:288 [SHOPIFY PROVIDER] ⚠️ No host parameter found - app may not be embedded
+i @ index-BDbUgeP4.js:288
+await in i
+(anonymous) @ index-BDbUgeP4.js:288
+yl @ index-BDbUgeP4.js:40
+Os @ index-BDbUgeP4.js:40
+fh @ index-BDbUgeP4.js:40
+Pr @ index-BDbUgeP4.js:38
+_j @ index-BDbUgeP4.js:40
+Ir @ index-BDbUgeP4.js:40
+Nv @ index-BDbUgeP4.js:40
+S @ index-BDbUgeP4.js:25
+D @ index-BDbUgeP4.js:25Understand this warning
