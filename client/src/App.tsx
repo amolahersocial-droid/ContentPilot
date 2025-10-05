@@ -5,11 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { ModeProvider } from "@/contexts/ModeContext";
+import { ModeProvider, useMode } from "@/contexts/ModeContext";
 import { ShopifyProvider } from "@/contexts/ShopifyProvider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ShopifyNav } from "@/components/ShopifyNav";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -50,11 +51,30 @@ function ProtectedRoute({ component: Component, adminOnly = false, ...rest }: an
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { isShopifyMode } = useMode();
 
   if (!user) {
     return <>{children}</>;
   }
 
+  // In Shopify mode, use Shopify navigation only
+  if (isShopifyMode) {
+    return (
+      <>
+        <ShopifyNav />
+        <div className="flex flex-col h-screen w-full">
+          <header className="flex items-center justify-end h-14 px-4 border-b border-border bg-background shrink-0">
+            <ThemeToggle />
+          </header>
+          <main className="flex-1 overflow-y-auto p-6 bg-background">
+            {children}
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  // Standalone mode uses sidebar
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
