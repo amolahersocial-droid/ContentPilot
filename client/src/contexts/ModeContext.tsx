@@ -21,10 +21,20 @@ function initializeGlobalMode(): { mode: AppMode; shop: string | null } {
   const embedded = params.get("embedded");
   const isInIframe = window.self !== window.top;
   
+  console.log("[MODE DETECTION] Initializing mode detection", {
+    pathname: window.location.pathname,
+    hasShopParam: !!shopParam,
+    hasEmbedded: !!embedded,
+    isInIframe,
+    hasSessionShop: !!sessionStorage.getItem("shopify_shop"),
+    hasSessionHost: !!sessionStorage.getItem("shopify_host")
+  });
+  
   if (shopParam || (embedded === "1" && isInIframe)) {
     const shop = shopParam || sessionStorage.getItem("shopify_shop");
     if (shop) {
       sessionStorage.setItem("shopify_shop", shop);
+      console.log("[MODE DETECTION] ✅ Shopify mode detected");
       return { mode: "shopify", shop };
     }
   }
@@ -34,6 +44,7 @@ function initializeGlobalMode(): { mode: AppMode; shop: string | null } {
   sessionStorage.removeItem("shopify_host");
   sessionStorage.removeItem("shop");
   
+  console.log("[MODE DETECTION] ✅ Standalone mode detected");
   return { mode: "standalone", shop: null };
 }
 
@@ -47,7 +58,11 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<AppMode>(globalAppMode);
   const [shop, setShop] = useState<string | null>(globalShop);
 
+  console.log("[MODE PROVIDER] Initial state", { mode, hasShop: !!shop, globalAppMode, hasGlobalShop: !!globalShop });
+
   useEffect(() => {
+    console.log("[MODE PROVIDER] useEffect running - re-detecting mode");
+    
     // Re-initialize from URL params (in case of navigation or refresh)
     const currentMode = initializeGlobalMode();
     
@@ -57,12 +72,30 @@ export function ModeProvider({ children }: { children: ReactNode }) {
     globalAppMode = currentMode.mode;
     globalShop = currentMode.shop;
     
+    console.log("[MODE PROVIDER] Updated global mode", { 
+      mode: currentMode.mode, 
+      hasShop: !!currentMode.shop,
+      globalAppMode,
+      hasGlobalShop: !!globalShop
+    });
+    
     // Store host parameter if in Shopify mode
     if (currentMode.mode === "shopify") {
       const params = new URLSearchParams(window.location.search);
       const host = params.get("host");
+      const hmac = params.get("hmac");
+      const idToken = params.get("id_token");
+      
+      console.log("[MODE PROVIDER] Shopify params", {
+        hasShop: !!currentMode.shop,
+        hasHost: !!host,
+        hasHmac: !!hmac,
+        hasIdToken: !!idToken
+      });
+      
       if (host) {
         sessionStorage.setItem("shopify_host", host);
+        console.log("[MODE PROVIDER] ✅ Host saved to sessionStorage");
       }
     }
   }, []);

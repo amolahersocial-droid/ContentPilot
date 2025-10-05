@@ -40,14 +40,41 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.shopify.com", "blob:"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "'unsafe-eval'", 
+        "https://cdn.shopify.com", 
+        "https://checkout.razorpay.com",
+        "blob:"
+      ],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com"
+      ],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://api.openai.com", "https://*.myshopify.com", "wss:", "ws:"],
-      fontSrc: ["'self'", "data:"],
+      connectSrc: [
+        "'self'", 
+        "https://api.openai.com", 
+        "https://*.myshopify.com",
+        "https://api.razorpay.com",
+        "wss:", 
+        "ws:"
+      ],
+      fontSrc: [
+        "'self'", 
+        "data:",
+        "https://fonts.gstatic.com",
+        "https://fonts.googleapis.com"
+      ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'self'"],
+      frameSrc: [
+        "'self'",
+        "https://checkout.razorpay.com",
+        "https://api.razorpay.com"
+      ],
       frameAncestors: ["https://*.myshopify.com", "https://admin.shopify.com"],
     },
   },

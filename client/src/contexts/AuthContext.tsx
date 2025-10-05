@@ -14,10 +14,17 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
+  console.log("[AUTH PROVIDER] Initializing AuthProvider");
+
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+  });
+
+  console.log("[AUTH PROVIDER] Auth state", { 
+    hasUser: !!user, 
+    isLoading 
   });
 
   const logoutMutation = useMutation({

@@ -61,12 +61,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const shop = req.query.shop as string;
       
+      console.log("[SHOPIFY AUTH] Install request received", { 
+        hasShop: !!shop,
+        queryParams: Object.keys(req.query),
+        hasSession: !!req.session
+      });
+      
       if (!shop) {
+        console.error("[SHOPIFY AUTH] ❌ No shop parameter provided");
         return res.status(400).json({ message: "Shop parameter required" });
       }
 
       // Validate shop domain
       if (!shop.endsWith('.myshopify.com')) {
+        console.error("[SHOPIFY AUTH] ❌ Invalid shop domain");
         return res.status(400).json({ message: "Invalid shop domain" });
       }
 
@@ -76,12 +84,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session) {
         (req.session as any).shopifyState = state;
         (req.session as any).shopifyShop = shop;
+        console.log("[SHOPIFY AUTH] ✅ State and shop saved to session");
       }
 
       const installUrl = getInstallUrl(shop, state);
+      console.log("[SHOPIFY AUTH] ✅ Redirecting to Shopify OAuth");
+      
       res.redirect(installUrl);
     } catch (error: any) {
-      console.error("Shopify install error:", error);
+      console.error("[SHOPIFY AUTH] ❌ Error:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -91,16 +102,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { code, hmac, shop, state } = req.query;
 
+      console.log("[SHOPIFY CALLBACK] OAuth callback received", { 
+        hasCode: !!code,
+        hasHmac: !!hmac,
+        hasShop: !!shop,
+        hasState: !!state,
+        hasHost: !!req.query.host,
+        paramCount: Object.keys(req.query).length,
+        hasSession: !!req.session
+      });
+
       // Verify HMAC
-      if (!verifyHmac(req.query)) {
+      const hmacValid = verifyHmac(req.query);
+      console.log("[SHOPIFY CALLBACK] HMAC verification", { 
+        valid: hmacValid
+      });
+      
+      if (!hmacValid) {
+        console.error("[SHOPIFY CALLBACK] ❌ HMAC verification failed");
         return res.status(403).json({ message: "HMAC verification failed" });
       }
 
       // Verify state
       const sessionState = req.session && (req.session as any).shopifyState;
+      console.log("[SHOPIFY CALLBACK] State verification", {
+        hasSessionState: !!sessionState,
+        hasQueryState: !!state,
+        matches: sessionState === state
+      });
+      
       if (!sessionState || sessionState !== state) {
+        console.error("[SHOPIFY CALLBACK] ❌ State verification failed");
         return res.status(403).json({ message: "State verification failed" });
       }
+
+      console.log("[SHOPIFY CALLBACK] ✅ Security checks passed - exchanging code for token");
 
       // Exchange code for access token
       const { access_token, scope } = await exchangeAccessToken(
@@ -108,8 +144,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code as string
       );
 
+      console.log("[SHOPIFY CALLBACK] ✅ Access token received", { 
+        hasAccessToken: !!access_token,
+        hasScope: !!scope
+      });
+
       // Get shop information
       const shopInfo = await getShopInfo(shop as string, access_token);
+      
+      console.log("[SHOPIFY CALLBACK] ✅ Shop info retrieved", {
+        hasShopName: !!shopInfo.name,
+        hasShopOwner: !!shopInfo.shop_owner,
+        hasEmail: !!shopInfo.email
+      });
 
       // Store or update shop in database
       const [shopRecord] = await db
@@ -137,18 +184,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .returning();
 
+      console.log("[SHOPIFY CALLBACK] ✅ Shop record saved to database");
+
       // Store shop in session
       if (req.session) {
         (req.session as any).shopifyShop = shop;
         (req.session as any).shopifyShopId = shopRecord.id;
+        console.log("[SHOPIFY CALLBACK] ✅ Shop info saved to session");
       }
 
       // Redirect to embedded app
       const host = req.query.host;
       const redirectUrl = `/?shop=${shop}&host=${host}&embedded=1`;
+      console.log("[SHOPIFY CALLBACK] ✅ Redirecting to embedded app");
+      
       res.redirect(redirectUrl);
     } catch (error: any) {
-      console.error("Shopify callback error:", error);
+      console.error("[SHOPIFY CALLBACK] ❌ Error:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -186,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(shops.shop, shop));
 
-      console.log(`[Shopify] App uninstalled from shop: ${shop}`);
+      console.log(`[SHOPIFY WEBHOOK] App uninstalled - shop marked inactive`);
       res.status(200).send("OK");
     } catch (error: any) {
       console.error("Webhook error:", error);
@@ -218,12 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bodyData = JSON.parse(rawBody.toString());
       const { shop_id, shop_domain, customer, orders_requested } = bodyData;
       
-      console.log(`[GDPR] Customer data request:`, {
-        shop: shop_domain,
-        customerId: customer?.id,
-        customerEmail: customer?.email,
-        ordersRequested: orders_requested
-      });
+      console.log(`[GDPR] Customer data request received - logging request`);
 
       // TODO: Implement actual customer data export
       // For now, we acknowledge the request
@@ -257,11 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bodyData = JSON.parse(rawBody.toString());
       const { shop_id, shop_domain, customer } = bodyData;
       
-      console.log(`[GDPR] Redacting customer data:`, {
-        shop: shop_domain,
-        customerId: customer?.id,
-        customerEmail: customer?.email
-      });
+      console.log(`[GDPR] Redacting customer data - processing request`);
 
       // Delete any customer-related data from our database
       // Note: We currently don't store customer data separately, 
@@ -297,10 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bodyData = JSON.parse(rawBody.toString());
       const { shop_id, shop_domain } = bodyData;
       
-      console.log(`[GDPR] Redacting shop data:`, {
-        shop: shop_domain,
-        shopId: shop_id
-      });
+      console.log(`[GDPR] Redacting shop data - deleting shop record`);
 
       // Delete shop and all related data
       await db.delete(shops).where(eq(shops.shop, shop_domain));
