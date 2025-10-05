@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publishedPosts = posts.filter((p) => p.status === "published");
       
       // Calculate plan usage
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUser(userId);
       const limit = user?.subscriptionPlan === "paid" ? 100 : 10;
       const used = user?.dailyPostsUsed || 0;
       const percentage = Math.min((used / limit) * 100, 100);
@@ -317,8 +317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: req.user.id,
             siteId: site.id,
             keyword: kw.keyword,
-            searchVolume: null,
-            difficulty: null,
             relevanceScore: kw.score,
             overallScore: kw.score,
             isPinned: false,
