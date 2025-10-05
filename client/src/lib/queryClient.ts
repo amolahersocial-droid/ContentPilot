@@ -7,11 +7,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Helper to add Shopify context to requests
+// Helper to add Shopify context to requests (only when in Shopify mode)
 function addShopifyContext(url: string, headers: Record<string, string> = {}): { url: string, headers: Record<string, string> } {
+  // Only add shop context if we're currently in Shopify embedded mode
+  // Check for the presence of embedded parameter or if we're in an iframe
+  const params = new URLSearchParams(window.location.search);
+  const isEmbedded = params.get('embedded') === '1' || window.self !== window.top;
   const shop = sessionStorage.getItem('shopify_shop');
   
-  if (shop) {
+  if (isEmbedded && shop) {
     // Add shop as query parameter if not already present
     const urlObj = new URL(url, window.location.origin);
     if (!urlObj.searchParams.has('shop')) {
