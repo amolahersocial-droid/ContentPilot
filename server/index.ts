@@ -13,6 +13,9 @@ console.log("🚀 Starting RankForge...");
 
 // Security middleware
 app.use(helmetConfig);
+// For Shopify webhooks, we need raw body for HMAC verification
+app.use('/api/webhooks/shopify', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(sanitizeInput);

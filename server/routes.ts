@@ -156,8 +156,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Shopify webhooks
   app.post("/api/webhooks/shopify/app/uninstalled", async (req, res) => {
     try {
-      // Verify webhook (Shopify sends HMAC in header)
-      const shop = req.body.shop_domain;
+      // Verify HMAC from Shopify webhook
+      const hmac = req.headers['x-shopify-hmac-sha256'] as string;
+      const rawBody = req.body; // This is a Buffer from express.raw()
+      
+      if (!hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      const generatedHash = crypto
+        .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
+        .update(rawBody)
+        .digest('base64');
+
+      if (!crypto.timingSafeEqual(Buffer.from(generatedHash), Buffer.from(hmac))) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      // Parse the body after verification
+      const bodyData = JSON.parse(rawBody.toString());
+      const shop = bodyData.shop_domain;
       
       // Mark shop as inactive
       await db
@@ -168,6 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(shops.shop, shop));
 
+      console.log(`[Shopify] App uninstalled from shop: ${shop}`);
       res.status(200).send("OK");
     } catch (error: any) {
       console.error("Webhook error:", error);
@@ -175,12 +194,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GDPR webhooks - with HMAC verification
+  // GDPR webhooks - with HMAC verification using raw body
   app.post("/api/webhooks/shopify/customers/data_request", async (req, res) => {
     try {
       // Verify HMAC from Shopify webhook
       const hmac = req.headers['x-shopify-hmac-sha256'] as string;
-      const body = JSON.stringify(req.body);
+      const rawBody = req.body; // This is a Buffer from express.raw()
       
       if (!hmac) {
         return res.status(401).send("Unauthorized");
@@ -188,15 +207,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const generatedHash = crypto
         .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
-        .update(body)
+        .update(rawBody)
         .digest('base64');
 
-      if (generatedHash !== hmac) {
+      if (!crypto.timingSafeEqual(Buffer.from(generatedHash), Buffer.from(hmac))) {
         return res.status(401).send("Unauthorized");
       }
 
-      // Log the data request - merchant will need to provide customer data
-      const { shop_id, shop_domain, customer, orders_requested } = req.body;
+      // Parse the body after verification
+      const bodyData = JSON.parse(rawBody.toString());
+      const { shop_id, shop_domain, customer, orders_requested } = bodyData;
+      
       console.log(`[GDPR] Customer data request:`, {
         shop: shop_domain,
         customerId: customer?.id,
@@ -217,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Verify HMAC from Shopify webhook
       const hmac = req.headers['x-shopify-hmac-sha256'] as string;
-      const body = JSON.stringify(req.body);
+      const rawBody = req.body; // This is a Buffer from express.raw()
       
       if (!hmac) {
         return res.status(401).send("Unauthorized");
@@ -225,15 +246,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const generatedHash = crypto
         .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
-        .update(body)
+        .update(rawBody)
         .digest('base64');
 
-      if (generatedHash !== hmac) {
+      if (!crypto.timingSafeEqual(Buffer.from(generatedHash), Buffer.from(hmac))) {
         return res.status(401).send("Unauthorized");
       }
 
-      // Delete customer data
-      const { shop_id, shop_domain, customer } = req.body;
+      // Parse the body after verification
+      const bodyData = JSON.parse(rawBody.toString());
+      const { shop_id, shop_domain, customer } = bodyData;
+      
       console.log(`[GDPR] Redacting customer data:`, {
         shop: shop_domain,
         customerId: customer?.id,
@@ -255,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Verify HMAC from Shopify webhook
       const hmac = req.headers['x-shopify-hmac-sha256'] as string;
-      const body = JSON.stringify(req.body);
+      const rawBody = req.body; // This is a Buffer from express.raw()
       
       if (!hmac) {
         return res.status(401).send("Unauthorized");
@@ -263,15 +286,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const generatedHash = crypto
         .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
-        .update(body)
+        .update(rawBody)
         .digest('base64');
 
-      if (generatedHash !== hmac) {
+      if (!crypto.timingSafeEqual(Buffer.from(generatedHash), Buffer.from(hmac))) {
         return res.status(401).send("Unauthorized");
       }
 
-      // Delete all shop data
-      const { shop_id, shop_domain } = req.body;
+      // Parse the body after verification
+      const bodyData = JSON.parse(rawBody.toString());
+      const { shop_id, shop_domain } = bodyData;
+      
       console.log(`[GDPR] Redacting shop data:`, {
         shop: shop_domain,
         shopId: shop_id
