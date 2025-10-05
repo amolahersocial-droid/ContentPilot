@@ -1,39 +1,105 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useMode } from "./ModeContext";
+
+declare global {
+  interface Window {
+    shopify?: any;
+    AppBridge?: any;
+  }
+}
 
 export function ShopifyProvider({ children }: { children: ReactNode }) {
   const { isShopifyMode } = useMode();
+  const [appBridgeReady, setAppBridgeReady] = useState(false);
 
   useEffect(() => {
-    async function loadShopifyAppBridge() {
+    async function initializeShopifyAppBridge() {
       if (!isShopifyMode) return;
 
       try {
+        // Get configuration from backend
         const response = await fetch("/api/shopify/config");
         const data = await response.json();
         
-        // Add meta tag for Shopify API key
+        // Get shop and host from URL params (Shopify passes these)
+        const params = new URLSearchParams(window.location.search);
+        let host = params.get('host');
+        const shop = params.get('shop');
+        
+        // Persist host and shop in sessionStorage for subsequent navigations
+        if (host) {
+          sessionStorage.setItem('shopify_host', host);
+        } else {
+          host = sessionStorage.getItem('shopify_host');
+        }
+
+        if (shop) {
+          sessionStorage.setItem('shopify_shop', shop);
+        }
+        
+        if (!host) {
+          console.warn('[Shopify] No host parameter found - app may not be embedded');
+          return;
+        }
+
+        // Add meta tag for Shopify API key (required for App Bridge 4.x)
         const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
-        if (!existingMeta) {
+        if (!existingMeta && data.apiKey) {
           const meta = document.createElement("meta");
           meta.name = "shopify-api-key";
           meta.content = data.apiKey;
           document.head.appendChild(meta);
         }
 
-        // Load App Bridge script if not already loaded
+        // Load App Bridge CDN script if not already loaded
+        const initializeAppBridge = () => {
+          if (window.shopify) {
+            console.log('[Shopify] App Bridge already initialized');
+            setAppBridgeReady(true);
+            return;
+          }
+
+          // App Bridge 4.x auto-initializes from the CDN
+          // Check if window.shopify is available
+          if ((window as any).shopify) {
+            console.log('[Shopify] App Bridge initialized from CDN');
+            setAppBridgeReady(true);
+          } else {
+            // Retry in case script is still loading
+            setTimeout(() => {
+              if ((window as any).shopify) {
+                console.log('[Shopify] App Bridge initialized (delayed)');
+                setAppBridgeReady(true);
+              }
+            }, 500);
+          }
+        };
+
         if (!document.querySelector('script[src*="app-bridge.js"]')) {
           const script = document.createElement("script");
           script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
           script.async = true;
+          
+          // Wait for script to load
+          script.onload = () => {
+            console.log('[Shopify] App Bridge CDN loaded');
+            initializeAppBridge();
+          };
+          
+          script.onerror = () => {
+            console.error('[Shopify] Failed to load App Bridge CDN');
+          };
+          
           document.head.appendChild(script);
+        } else {
+          initializeAppBridge();
         }
       } catch (error) {
-        console.error("Failed to load Shopify App Bridge:", error);
+        console.error("[Shopify] Failed to initialize App Bridge:", error);
       }
     }
 
-    loadShopifyAppBridge();
+    initializeShopifyAppBridge();
   }, [isShopifyMode]);
 
   return <>{children}</>;
