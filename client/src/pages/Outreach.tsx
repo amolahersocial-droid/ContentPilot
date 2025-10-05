@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ interface SmtpCredential {
 export default function Outreach() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
   const [showSmtpDialog, setShowSmtpDialog] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
@@ -112,7 +114,9 @@ export default function Outreach() {
               Upgrade to a paid plan to access AI-powered email outreach, automated contact discovery,
               and comprehensive analytics for your backlink campaigns.
             </p>
-            <Button data-testid="button-upgrade">Upgrade Now</Button>
+            <Button data-testid="button-upgrade" onClick={() => setLocation("/dashboard/settings")}>
+              Upgrade Now
+            </Button>
           </CardContent>
         </Card>
       </div>

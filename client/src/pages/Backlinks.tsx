@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import type { Backlink } from "@shared/schema";
 
 export default function Backlinks() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [addProspectOpen, setAddProspectOpen] = useState(false);
 
   const { data: backlinks, isLoading } = useQuery<Backlink[]>({
@@ -62,7 +64,7 @@ export default function Backlinks() {
               The backlink helper feature is available on paid plans only. Upgrade to identify prospects,
               manage outreach, and track backlink confirmations.
             </p>
-            <Button data-testid="button-upgrade">
+            <Button data-testid="button-upgrade" onClick={() => setLocation("/dashboard/settings")}>
               <Crown className="h-4 w-4 mr-2" />
               Upgrade to Paid Plan
             </Button>
