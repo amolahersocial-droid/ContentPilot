@@ -1,0 +1,67 @@
+[MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+index-DU6v3cdJ.js:48 [MODE DETECTION] ✅ Shopify mode detected
+index-DU6v3cdJ.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-DU6v3cdJ.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-DU6v3cdJ.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+index-DU6v3cdJ.js:48 [QUERY CLIENT] ✅ Added shop parameter
+index-DU6v3cdJ.js:48 [QUERY FN] Making fetch
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+index-DU6v3cdJ.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-DU6v3cdJ.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: true, hasSessionShop: true, …}
+index-DU6v3cdJ.js:48 [MODE DETECTION] ✅ Standalone mode detected
+index-DU6v3cdJ.js:48 [MODE PROVIDER] Updated global mode {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+[Violation] Potential permissions policy violation: camera is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: web-share is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.Understand this error
+index-DU6v3cdJ.js:48 [MODE PROVIDER] Initial state {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Initializing {isShopifyMode: false, hasShop: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Not in Shopify mode - skipping App Bridge init
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Config received {hasApiKey: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] URL params {hasHost: false, hasShop: false, hasHmac: false, hasIdToken: false, hasEmbedded: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Retrieved host from sessionStorage {hasHost: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] ⚠️ No host parameter found - app may not be embedded
+i @ index-DU6v3cdJ.js:288
+await in i
+(anonymous) @ index-DU6v3cdJ.js:288
+yl @ index-DU6v3cdJ.js:40
+Os @ index-DU6v3cdJ.js:40
+fh @ index-DU6v3cdJ.js:40
+Pr @ index-DU6v3cdJ.js:38
+_j @ index-DU6v3cdJ.js:40
+Ir @ index-DU6v3cdJ.js:40
+Nv @ index-DU6v3cdJ.js:40
+S @ index-DU6v3cdJ.js:25
+M @ index-DU6v3cdJ.js:25Understand this warning
+index-DU6v3cdJ.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user?shop=test-store-techronyx.myshopify.com 401 (Unauthorized)
+(anonymous) @ index-DU6v3cdJ.js:48
+i @ index-DU6v3cdJ.js:48
+w @ index-DU6v3cdJ.js:48
+start @ index-DU6v3cdJ.js:48
+fetch @ index-DU6v3cdJ.js:48
+Uo @ index-DU6v3cdJ.js:48
+onSubscribe @ index-DU6v3cdJ.js:48
+subscribe @ index-DU6v3cdJ.js:48
+(anonymous) @ index-DU6v3cdJ.js:48
+Kg @ index-DU6v3cdJ.js:38
+yl @ index-DU6v3cdJ.js:40
+Os @ index-DU6v3cdJ.js:40
+fh @ index-DU6v3cdJ.js:40
+Pr @ index-DU6v3cdJ.js:38
+_j @ index-DU6v3cdJ.js:40
+Ir @ index-DU6v3cdJ.js:40
+Nv @ index-DU6v3cdJ.js:40
+S @ index-DU6v3cdJ.js:25
+M @ index-DU6v3cdJ.js:25Understand this error
+index-DU6v3cdJ.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-DU6v3cdJ.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
