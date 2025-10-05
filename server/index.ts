@@ -20,15 +20,18 @@ app.use(sanitizeInput);
 // Attach app mode detector (Shopify vs Standalone)
 app.use(attachAppMode);
 
-// Setup Auth (supports both Replit Auth for standalone and Shopify OAuth)
-await setupAuth(app);
-
 // API rate limiting
 app.use("/api", apiRateLimiter);
 
-// Start background job worker and scheduler
-startWorker();
-startScheduler();
+// Initialize async components and start server
+(async () => {
+  // Setup Auth (supports both Replit Auth for standalone and Shopify OAuth)
+  await setupAuth(app);
+
+  // Start background job worker and scheduler
+  startWorker();
+  startScheduler();
+})();
 
 app.use((req, res, next) => {
   const start = Date.now();
