@@ -12,22 +12,27 @@ export default function Login() {
   const { user } = useAuth();
   const { isShopifyMode } = useMode();
 
+  // Check for shop parameter immediately on component mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get('shop');
+    const embedded = params.get('embedded');
+    
+    // If shop parameter or embedded parameter exists, redirect to Shopify OAuth
+    if (shop || (embedded === '1' && window.self !== window.top)) {
+      const shopParam = shop || sessionStorage.getItem('shop');
+      if (shopParam) {
+        window.location.href = `/api/shopify/auth?shop=${shopParam}`;
+        return;
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       setLocation("/dashboard");
     }
   }, [user, setLocation]);
-
-  // If in Shopify mode, redirect to Shopify OAuth
-  useEffect(() => {
-    if (isShopifyMode) {
-      const params = new URLSearchParams(window.location.search);
-      const shop = params.get('shop');
-      if (shop) {
-        window.location.href = `/api/shopify/auth?shop=${shop}`;
-      }
-    }
-  }, [isShopifyMode]);
 
   const handleGoogleLogin = () => {
     window.location.href = "/api/login";
@@ -58,7 +63,7 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to RankForge</CardTitle>
           <CardDescription>
-            Sign in with your Google account to continue
+            Sign in with your Replit account to continue
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -71,10 +76,10 @@ export default function Login() {
             type="button"
             className="w-full gap-2"
             onClick={handleGoogleLogin}
-            data-testid="button-google-login"
+            data-testid="button-replit-login"
           >
-            <SiGoogle className="h-4 w-4" />
-            Sign in with Google
+            <Crown className="h-4 w-4" />
+            Continue with Replit
           </Button>
           <div className="text-xs text-center text-muted-foreground">
             By signing in, you agree to our Terms of Service and Privacy Policy
