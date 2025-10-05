@@ -85,6 +85,44 @@ export class RazorpayService {
   }
 
   /**
+   * Create a payment link
+   */
+  async createPaymentLink(params: {
+    amount: number; // in paise (100 paise = 1 INR)
+    currency?: string;
+    description: string;
+    customerEmail: string;
+    customerName: string;
+  }) {
+    try {
+      const paymentLink = await (this.razorpay as any).paymentLink.create({
+        amount: params.amount * 100, // Convert to paise
+        currency: params.currency || "INR",
+        description: params.description,
+        customer: {
+          email: params.customerEmail,
+          name: params.customerName,
+        },
+        notify: {
+          sms: false,
+          email: true,
+        },
+        reminder_enable: true,
+        callback_url: `${process.env.REPL_URL || 'http://localhost:5000'}/api/subscriptions/payment-success`,
+        callback_method: 'get',
+      });
+
+      return {
+        id: paymentLink.id,
+        short_url: paymentLink.short_url,
+        status: paymentLink.status,
+      };
+    } catch (error: any) {
+      throw new Error(`Razorpay payment link creation failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Verify payment signature
    */
   verifyPaymentSignature(params: {

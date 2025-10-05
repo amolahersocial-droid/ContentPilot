@@ -28,53 +28,62 @@ export default function Settings() {
       return res.json();
     },
     onSuccess: (data: any) => {
-      // Initialize Razorpay checkout
-      const options = {
-        key: data.keyId,
-        subscription_id: data.subscriptionId,
-        name: "SEO Content SaaS",
-        description: "Paid Subscription Plan",
-        handler: async function (response: any) {
-          try {
-            const verifyRes = await apiRequest("POST", "/api/subscriptions/verify", {
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-            
-            if (verifyRes.ok) {
-              toast({
-                title: "Subscription activated!",
-                description: "Welcome to the paid plan. Enjoy unlimited features!",
+      // Check if we received a payment link or subscription
+      if (data.paymentLinkId || (data.shortUrl && !data.subscriptionId)) {
+        // Open payment link in new window
+        window.open(data.shortUrl, '_blank');
+        toast({
+          title: "Payment link opened",
+          description: "Complete the payment in the new window to upgrade your plan.",
+        });
+      } else if (data.subscriptionId) {
+        // Initialize Razorpay checkout for subscription
+        const options = {
+          key: data.keyId,
+          subscription_id: data.subscriptionId,
+          name: "SEO Content SaaS",
+          description: "Paid Subscription Plan",
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await apiRequest("POST", "/api/subscriptions/verify", {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature,
               });
-              // Refresh the page to update user data
-              window.location.reload();
-            } else {
-              throw new Error("Payment verification failed");
+              
+              if (verifyRes.ok) {
+                toast({
+                  title: "Subscription activated!",
+                  description: "Welcome to the paid plan. Enjoy unlimited features!",
+                });
+                window.location.reload();
+              } else {
+                throw new Error("Payment verification failed");
+              }
+            } catch (error: any) {
+              toast({
+                title: "Payment verification failed",
+                description: error.message,
+                variant: "destructive",
+              });
             }
-          } catch (error: any) {
-            toast({
-              title: "Payment verification failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
-        },
-        modal: {
-          ondismiss: function() {
-            toast({
-              title: "Payment cancelled",
-              description: "You can upgrade anytime from settings.",
-            });
-          }
-        },
-        theme: {
-          color: "#8b5cf6",
-        },
-      };
+          },
+          modal: {
+            ondismiss: function() {
+              toast({
+                title: "Payment cancelled",
+                description: "You can upgrade anytime from settings.",
+              });
+            }
+          },
+          theme: {
+            color: "#8b5cf6",
+          },
+        };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      }
     },
     onError: (error: any) => {
       toast({

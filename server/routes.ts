@@ -710,25 +710,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const razorpay = getRazorpayInstance();
       
-      const subscription = await razorpay.createSubscription({
-        planId: RAZORPAY_PLAN_ID,
-        customerId: req.user.razorpayCustomerId || undefined,
-        customerEmail: req.user.email,
-        customerName: req.user.username,
-      });
+      // If plan ID is available, use subscription
+      if (RAZORPAY_PLAN_ID) {
+        const subscription = await razorpay.createSubscription({
+          planId: RAZORPAY_PLAN_ID,
+          customerId: req.user.razorpayCustomerId || undefined,
+          customerEmail: req.user.email,
+          customerName: req.user.username,
+        });
 
-      // Update user with Razorpay customer ID
-      if (!req.user.razorpayCustomerId) {
-        await storage.updateUser(req.user.id, {
-          razorpayCustomerId: subscription.customerId,
+        // Update user with Razorpay customer ID
+        if (!req.user.razorpayCustomerId) {
+          await storage.updateUser(req.user.id, {
+            razorpayCustomerId: subscription.customerId,
+          });
+        }
+
+        return res.json({
+          subscriptionId: subscription.subscriptionId,
+          shortUrl: subscription.shortUrl,
+          keyId: process.env.RAZORPAY_KEY_ID,
+        });
+      } else {
+        // Create payment link for one-time payment if no plan ID
+        const paymentLink = await razorpay.createPaymentLink({
+          amount: req.body.amount || 1999,
+          currency: "INR",
+          description: "Paid Plan Subscription - Monthly",
+          customerEmail: req.user.email,
+          customerName: req.user.username,
+        });
+
+        return res.json({
+          paymentLinkId: paymentLink.id,
+          shortUrl: paymentLink.short_url,
+          keyId: process.env.RAZORPAY_KEY_ID,
         });
       }
-
-      return res.json({
-        subscriptionId: subscription.subscriptionId,
-        shortUrl: subscription.shortUrl,
-        keyId: process.env.RAZORPAY_KEY_ID,
-      });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
