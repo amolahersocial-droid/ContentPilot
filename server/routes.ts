@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { hashPassword, requireAuth, requireAdmin, requirePaidPlan } from "./auth";
 import { insertUserSchema, insertSiteSchema, insertKeywordSchema, insertPostSchema, insertBacklinkSchema } from "@shared/schema";
@@ -12,6 +13,9 @@ import { SiteCrawler } from "./services/site-crawler";
 import { BacklinkHelper } from "./services/backlink-helper";
 import { getRazorpayInstance } from "./services/razorpay";
 import { contentGenerationQueue, publishingQueue } from "./queue";
+import { smtpService } from "./services/smtp";
+import { outreachTemplateService } from "./services/outreach-templates";
+import { websiteDiscoveryService } from "./services/website-discovery";
 import {
   authRateLimiter,
   contentGenerationRateLimiter,
@@ -894,6 +898,394 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(userWithoutPassword);
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
+    }
+  });
+
+  // SMTP Credentials Routes
+  app.post("/api/outreach/smtp", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { provider, email, password, smtpHost, smtpPort } = req.body;
+      
+      const credentialId = await smtpService.storeCredentials(
+        req.user.id,
+        provider,
+        email,
+        password,
+        smtpHost,
+        smtpPort
+      );
+      
+      return res.json({ id: credentialId, message: "SMTP credentials saved successfully" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/outreach/smtp", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { smtpCredentials: smtpCreds } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq } = await import("drizzle-orm");
+      
+      const credentials = await db
+        .select()
+        .from(smtpCreds)
+        .where(eq(smtpCreds.userId, req.user.id));
+      
+      const safe = credentials.map(c => ({
+        ...c,
+        encryptedPassword: undefined,
+        oauthAccessToken: undefined,
+        oauthRefreshToken: undefined,
+      }));
+      
+      return res.json(safe);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/outreach/smtp/:id", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { smtpCredentials: smtpCreds } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      await db
+        .delete(smtpCreds)
+        .where(and(
+          eq(smtpCreds.id, req.params.id),
+          eq(smtpCreds.userId, req.user.id)
+        ));
+      
+      return res.json({ message: "SMTP credentials deleted" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Outreach Campaign Routes
+  app.post("/api/outreach/campaigns", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { insertOutreachCampaignSchema, outreachCampaigns } = await import("@shared/schema");
+      const { db } = await import("./db");
+      
+      const result = insertOutreachCampaignSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+      });
+      
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
+      }
+      
+      const [campaign] = await db
+        .insert(outreachCampaigns)
+        .values(result.data)
+        .returning();
+      
+      return res.json(campaign);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/outreach/campaigns", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, desc } = await import("drizzle-orm");
+      
+      const campaigns = await db
+        .select()
+        .from(outreachCampaigns)
+        .where(eq(outreachCampaigns.userId, req.user.id))
+        .orderBy(desc(outreachCampaigns.createdAt));
+      
+      return res.json(campaigns);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/outreach/campaigns/:id", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns, outreachContacts, outreachEmails } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const [campaign] = await db
+        .select()
+        .from(outreachCampaigns)
+        .where(and(
+          eq(outreachCampaigns.id, req.params.id),
+          eq(outreachCampaigns.userId, req.user.id)
+        ));
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const contacts = await db
+        .select()
+        .from(outreachContacts)
+        .where(eq(outreachContacts.campaignId, req.params.id));
+      
+      const emails = await db
+        .select()
+        .from(outreachEmails)
+        .where(eq(outreachEmails.campaignId, req.params.id));
+      
+      return res.json({ ...campaign, contacts, emails });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/outreach/campaigns/:id", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const [campaign] = await db
+        .update(outreachCampaigns)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(
+          eq(outreachCampaigns.id, req.params.id),
+          eq(outreachCampaigns.userId, req.user.id)
+        ))
+        .returning();
+      
+      return res.json(campaign);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/outreach/campaigns/:id/discover", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns, outreachContacts } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const [campaign] = await db
+        .select()
+        .from(outreachCampaigns)
+        .where(and(
+          eq(outreachCampaigns.id, req.params.id),
+          eq(outreachCampaigns.userId, req.user.id)
+        ));
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const discovered = await websiteDiscoveryService.discoverWebsites(
+        campaign.niche,
+        campaign.targetWebsiteCount
+      );
+      
+      const contacts = await Promise.all(
+        discovered.map(async (site) => {
+          if (!site.email) return null;
+          
+          const [contact] = await db
+            .insert(outreachContacts)
+            .values({
+              campaignId: campaign.id,
+              websiteUrl: site.url,
+              websiteName: site.name,
+              contactEmail: site.email,
+              contactName: site.contactName,
+              domainAuthority: site.domainAuthority,
+              isValidated: await websiteDiscoveryService.validateEmail(site.email),
+            })
+            .returning();
+          
+          return contact;
+        })
+      );
+      
+      return res.json(contacts.filter(Boolean));
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/outreach/campaigns/:id/generate-template", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const [campaign] = await db
+        .select()
+        .from(outreachCampaigns)
+        .where(and(
+          eq(outreachCampaigns.id, req.params.id),
+          eq(outreachCampaigns.userId, req.user.id)
+        ));
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const template = await outreachTemplateService.generateEmailTemplate({
+        niche: campaign.niche,
+        tone: campaign.tone,
+        senderName: req.user.username,
+        senderWebsite: req.body.senderWebsite || "",
+      });
+      
+      return res.json(template);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/outreach/campaigns/:id/send", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { outreachCampaigns, outreachContacts, outreachEmails, smtpCredentials: smtpCreds } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const { smtpCredentialId, emailTemplate } = req.body;
+      
+      const [campaign] = await db
+        .select()
+        .from(outreachCampaigns)
+        .where(and(
+          eq(outreachCampaigns.id, req.params.id),
+          eq(outreachCampaigns.userId, req.user.id)
+        ));
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const contacts = await db
+        .select()
+        .from(outreachContacts)
+        .where(eq(outreachContacts.campaignId, req.params.id));
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const contact of contacts) {
+        try {
+          const personalized = outreachTemplateService.personalizeEmail(emailTemplate, {
+            recipientName: contact.contactName || undefined,
+            recipientWebsite: contact.websiteUrl,
+            senderName: req.user.username,
+            senderWebsite: req.body.senderWebsite || "",
+          });
+          
+          const trackingId = crypto.randomUUID();
+          
+          const result = await smtpService.sendEmail(smtpCredentialId, {
+            to: contact.contactEmail,
+            subject: personalized.subject,
+            html: personalized.body,
+            trackingId,
+          });
+          
+          const [email] = await db
+            .insert(outreachEmails)
+            .values({
+              campaignId: campaign.id,
+              contactId: contact.id,
+              subject: personalized.subject,
+              body: personalized.body,
+              status: result.success ? "sent" : "failed",
+              trackingId,
+              sentAt: result.success ? new Date() : null,
+              errorMessage: result.error,
+              personalizationData: {
+                recipientName: contact.contactName,
+                senderWebsite: req.body.senderWebsite,
+              },
+            })
+            .returning();
+          
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.error(`Failed to send email to ${contact.contactEmail}:`, error);
+          failCount++;
+        }
+      }
+      
+      await db
+        .update(outreachCampaigns)
+        .set({ 
+          emailsSent: campaign.emailsSent + successCount,
+          status: "active",
+        })
+        .where(eq(outreachCampaigns.id, campaign.id));
+      
+      return res.json({ successCount, failCount, totalContacts: contacts.length });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/outreach/track/open/:trackingId", async (req, res) => {
+    try {
+      const { outreachEmails, outreachEvents } = await import("@shared/schema");
+      const { db } = await import("./db");
+      const { eq } = await import("drizzle-orm");
+      
+      const [email] = await db
+        .select()
+        .from(outreachEmails)
+        .where(eq(outreachEmails.trackingId, req.params.trackingId));
+      
+      if (email && !email.openedAt) {
+        await db
+          .update(outreachEmails)
+          .set({ 
+            status: "opened",
+            openedAt: new Date(),
+          })
+          .where(eq(outreachEmails.id, email.id));
+        
+        await db
+          .insert(outreachEvents)
+          .values({
+            emailId: email.id,
+            eventType: "opened",
+            userAgent: req.get("user-agent") || null,
+            ipAddress: req.ip || null,
+          });
+      }
+      
+      const pixel = Buffer.from(
+        "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "base64"
+      );
+      res.writeHead(200, {
+        "Content-Type": "image/gif",
+        "Content-Length": pixel.length,
+      });
+      res.end(pixel);
+    } catch (error) {
+      res.status(200).end();
     }
   });
 
