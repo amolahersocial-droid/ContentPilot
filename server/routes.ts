@@ -112,20 +112,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sites = await storage.getSitesByUserId(userId);
       const keywords = await storage.getKeywordsByUserId(userId);
       const posts = await storage.getPostsByUserId(userId);
-      const recentPosts = await storage.getRecentPosts(userId, 5);
 
       const publishedPosts = posts.filter((p) => p.status === "published");
-      const draftPosts = posts.filter((p) => p.status === "draft");
-      const scheduledPosts = posts.filter((p) => p.status === "scheduled");
+      
+      // Calculate plan usage
+      const user = await storage.getUserById(userId);
+      const limit = user?.subscriptionPlan === "paid" ? 100 : 10;
+      const used = user?.dailyPostsUsed || 0;
+      const percentage = Math.min((used / limit) * 100, 100);
 
       return res.json({
-        totalSites: sites.length,
-        totalKeywords: keywords.length,
-        totalPosts: posts.length,
-        publishedPosts: publishedPosts.length,
-        draftPosts: draftPosts.length,
-        scheduledPosts: scheduledPosts.length,
-        recentPosts,
+        sitesConnected: sites.length,
+        postsPublished: publishedPosts.length,
+        keywordsTracked: keywords.length,
+        planUsage: {
+          used,
+          limit,
+          percentage,
+        },
       });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
