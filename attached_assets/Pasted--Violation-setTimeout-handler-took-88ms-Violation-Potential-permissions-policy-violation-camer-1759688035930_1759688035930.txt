@@ -1,0 +1,65 @@
+[Violation] 'setTimeout' handler took 88ms
+[Violation] Potential permissions policy violation: camera is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: web-share is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.Understand this error
+index-D0SmBGkx.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+index-D0SmBGkx.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+index-D0SmBGkx.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}globalAppMode: "shopify"hasGlobalShop: truehasShop: truemode: "shopify"[[Prototype]]: Object
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+index-D0SmBGkx.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-D0SmBGkx.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-D0SmBGkx.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-D0SmBGkx.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+index-D0SmBGkx.js:48 [QUERY CLIENT] ✅ Added shop parameter
+index-D0SmBGkx.js:48 [QUERY FN] Making fetch
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+index-D0SmBGkx.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-D0SmBGkx.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/dashboard', hasShopParam: false, hasEmbedded: false, isInIframe: true, hasSessionShop: true, …}
+index-D0SmBGkx.js:48 [MODE DETECTION] ✅ Shopify mode detected (iframe with session)
+index-D0SmBGkx.js:48 [MODE PROVIDER] Updated global mode {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-D0SmBGkx.js:48 [MODE PROVIDER] Shopify params {hasShop: true, hasHost: false, hasHmac: false, hasIdToken: false}
+index-D0SmBGkx.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user?shop=test-store-techronyx.myshopify.com 401 (Unauthorized)
+(anonymous) @ index-D0SmBGkx.js:48
+i @ index-D0SmBGkx.js:48
+w @ index-D0SmBGkx.js:48
+start @ index-D0SmBGkx.js:48
+fetch @ index-D0SmBGkx.js:48
+Uo @ index-D0SmBGkx.js:48
+onSubscribe @ index-D0SmBGkx.js:48
+subscribe @ index-D0SmBGkx.js:48
+(anonymous) @ index-D0SmBGkx.js:48
+Kg @ index-D0SmBGkx.js:38
+yl @ index-D0SmBGkx.js:40
+Os @ index-D0SmBGkx.js:40
+fh @ index-D0SmBGkx.js:40
+Pr @ index-D0SmBGkx.js:38
+_j @ index-D0SmBGkx.js:40
+Ir @ index-D0SmBGkx.js:40
+Nv @ index-D0SmBGkx.js:40
+S @ index-D0SmBGkx.js:25
+M @ index-D0SmBGkx.js:25Understand this error
+index-D0SmBGkx.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-D0SmBGkx.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-D0SmBGkx.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-D0SmBGkx.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] Config received {hasApiKey: false}
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] URL params {hasHost: false, hasShop: false, hasHmac: false, hasIdToken: false, hasEmbedded: false}hasEmbedded: falsehasHmac: falsehasHost: falsehasIdToken: falsehasShop: false[[Prototype]]: Object
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] Retrieved host from sessionStorage {hasHost: false}hasHost: false[[Prototype]]: Object
+index-D0SmBGkx.js:288 [SHOPIFY PROVIDER] ⚠️ No host parameter found - app may not be embedded
+i @ index-D0SmBGkx.js:288
+await in i
+(anonymous) @ index-D0SmBGkx.js:288
+yl @ index-D0SmBGkx.js:40
+Os @ index-D0SmBGkx.js:40
+fh @ index-D0SmBGkx.js:40
+Pr @ index-D0SmBGkx.js:38
+_j @ index-D0SmBGkx.js:40
+Ir @ index-D0SmBGkx.js:40
+Nv @ index-D0SmBGkx.js:40
+S @ index-D0SmBGkx.js:25
+M @ index-D0SmBGkx.js:25Understand this warning
