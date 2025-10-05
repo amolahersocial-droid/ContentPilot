@@ -22,8 +22,20 @@ This platform helps users generate high-quality, SEO-optimized content automatic
 ### Platform Integration
 - **WordPress**: Full REST API integration with Application Passwords authentication
 - **Shopify**: Admin API integration with Theme App Extensions support
-- **Site Crawling**: Robots.txt compliant crawling with metadata extraction
+- **Advanced Site Crawler**: 
+  - Robots.txt parsing with respect for crawl-delay and disallow rules
+  - Configurable depth (quick: 2 levels/25 pages, deep: 4 levels/100 pages)
+  - Metadata extraction (title, description, h1/h2, images, meta tags)
+  - Internal/external link mapping with site structure graph
+  - Content-type validation and size limits (5MB max)
+  - Polite crawling with automatic delays
 - **Direct Publishing**: One-click publishing to connected sites
+- **Backlink Helper** (paid plan):
+  - Prospect identification from crawl data
+  - Personalized email template generation
+  - Outreach tracking with status management
+  - Follow-up reminder system
+  - Prospect scoring algorithm
 
 ### Subscription Management
 - **Free Plan**: 1 site, 10 keywords, 3 posts/day
@@ -52,7 +64,13 @@ This platform helps users generate high-quality, SEO-optimized content automatic
 - **PostgreSQL** database (Neon)
 - **Drizzle ORM** for type-safe queries
 - **Passport.js** for authentication with sessions
-- **Express Session** with memory store
+- **Express Session** with PostgreSQL store
+- **Security Middleware**:
+  - Rate limiting (auth: 5/15min, API: 100/min, content: 10/hour)
+  - Helmet with strict CSP in production
+  - Input sanitization with prototype pollution prevention
+  - Request validation with express-validator
+  - XSS protection with HTML tag stripping
 
 ### AI & Services
 - **OpenAI GPT-5** for content generation
@@ -96,11 +114,15 @@ This platform helps users generate high-quality, SEO-optimized content automatic
 │   ├── auth.ts              # Authentication middleware
 │   ├── storage.ts           # Database storage layer
 │   ├── db.ts                # Database connection
+│   ├── middleware/          # Security & validation
+│   │   └── security.ts      # Rate limiting, sanitization, validation
 │   └── services/            # External integrations
 │       ├── openai.ts        # GPT-5 + DALL·E
 │       ├── seo-validator.ts # SEO quality checks
 │       ├── wordpress.ts     # WordPress API client
-│       └── shopify.ts       # Shopify API client
+│       ├── shopify.ts       # Shopify API client
+│       ├── site-crawler.ts  # Advanced site crawler
+│       └── backlink-helper.ts # Backlink prospect management
 └── shared/
     └── schema.ts            # Database schema (Drizzle)
 ```
