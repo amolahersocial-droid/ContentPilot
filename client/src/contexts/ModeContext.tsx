@@ -14,29 +14,56 @@ const ModeContext = createContext<ModeContextType>({
   isShopifyMode: false,
 });
 
+// Initialize mode synchronously at module load (before React renders)
+function initializeGlobalMode(): { mode: AppMode; shop: string | null } {
+  const params = new URLSearchParams(window.location.search);
+  const shopParam = params.get("shop");
+  const embedded = params.get("embedded");
+  const isInIframe = window.self !== window.top;
+  
+  if (shopParam || (embedded === "1" && isInIframe)) {
+    const shop = shopParam || sessionStorage.getItem("shopify_shop");
+    if (shop) {
+      sessionStorage.setItem("shopify_shop", shop);
+      return { mode: "shopify", shop };
+    }
+  }
+  
+  // Standalone mode - clear any stale Shopify data
+  sessionStorage.removeItem("shopify_shop");
+  sessionStorage.removeItem("shopify_host");
+  sessionStorage.removeItem("shop");
+  
+  return { mode: "standalone", shop: null };
+}
+
+// Export global mode for use in non-React contexts (initialized synchronously)
+const initialMode = initializeGlobalMode();
+export let globalAppMode: AppMode = initialMode.mode;
+export let globalShop: string | null = initialMode.shop;
+
 export function ModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<AppMode>("standalone");
-  const [shop, setShop] = useState<string | null>(null);
+  // Use the already-initialized global values
+  const [mode, setMode] = useState<AppMode>(globalAppMode);
+  const [shop, setShop] = useState<string | null>(globalShop);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shopParam = params.get("shop");
-    const embedded = params.get("embedded");
+    // Re-initialize from URL params (in case of navigation or refresh)
+    const currentMode = initializeGlobalMode();
     
-    if (shopParam) {
-      setMode("shopify");
-      setShop(shopParam);
-      sessionStorage.setItem("shop", shopParam);
-    } else {
-      const storedShop = sessionStorage.getItem("shop");
-      if (storedShop) {
-        setMode("shopify");
-        setShop(storedShop);
+    // Update both React state AND global variables
+    setMode(currentMode.mode);
+    setShop(currentMode.shop);
+    globalAppMode = currentMode.mode;
+    globalShop = currentMode.shop;
+    
+    // Store host parameter if in Shopify mode
+    if (currentMode.mode === "shopify") {
+      const params = new URLSearchParams(window.location.search);
+      const host = params.get("host");
+      if (host) {
+        sessionStorage.setItem("shopify_host", host);
       }
-    }
-
-    if (embedded === "1" && window.self !== window.top) {
-      setMode("shopify");
     }
   }, []);
 

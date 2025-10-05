@@ -4,13 +4,15 @@
 
 This platform is a fully automated, production-ready SaaS solution for generating and publishing SEO-optimized content to WordPress and Shopify sites. Its core purpose is to streamline content creation, enhance SEO performance, and automate publishing workflows. The platform leverages advanced AI for content and image generation, comprehensive SEO validation, and robust background processing for efficiency. It aims to serve businesses and individuals seeking to scale their content marketing efforts, offering features like subscription management, scheduled posting, and an admin dashboard for platform oversight.
 
+**Latest Update (October 5, 2025)**: Completed "Built for Shopify" compliance with App Bridge 4.x NavMenu, GDPR webhooks with HMAC verification, policy pages, and dual-mode authentication (Replit Auth for standalone, Shopify OAuth for embedded).
+
 ## User Preferences
 
 - **Design**: Dark mode default, purple primary color
-- **Architecture**: Schema-first, horizontal batching, background jobs
+- **Architecture**: Schema-first, horizontal batching, background jobs, dual-mode (standalone + Shopify embedded)
 - **Quality**: Frontend excellence priority, accessibility focus
-- **Compliance**: WordPress 2025 standards, Shopify app guidelines
-- **Payments**: Razorpay (not Stripe)
+- **Compliance**: WordPress 2025 standards, Shopify "Built for Shopify" requirements
+- **Payments**: Razorpay for standalone mode, Shopify Billing API for embedded mode
 - **Processing**: Async job queue for all content generation and publishing
 
 ## System Architecture
