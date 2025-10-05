@@ -109,6 +109,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json(userResponse);
   });
 
+  app.patch("/api/users/settings", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const { openaiApiKey, useOwnOpenAiKey } = req.body;
+      
+      // For free users, enforce that they must use their own API key
+      if (req.user.subscriptionPlan === "free" && !openaiApiKey && !req.user.openaiApiKey) {
+        return res.status(400).json({ 
+          message: "Free plan users must provide an OpenAI API key" 
+        });
+      }
+      
+      // Update user settings
+      await storage.updateUser(req.user.id, {
+        openaiApiKey: openaiApiKey || req.user.openaiApiKey,
+        useOwnOpenAiKey: req.user.subscriptionPlan === "free" ? true : useOwnOpenAiKey,
+      });
+      
+      return res.json({ message: "Settings updated successfully" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -407,6 +432,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check daily limits for free plan
       const now = new Date();
       if (req.user.subscriptionPlan === "free") {
+        // Free users must have their own OpenAI API key
+        if (!req.user.openaiApiKey) {
+          return res.status(403).json({ 
+            message: "Free plan users must provide their own OpenAI API key in Settings before generating content." 
+          });
+        }
+        
         if (req.user.dailyPostsUsed >= 3) {
           return res.status(403).json({ message: "Free plan limited to 3 posts per day. Upgrade for unlimited." });
         }

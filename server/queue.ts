@@ -43,9 +43,25 @@ export const scheduledPostQueue = new Queue("scheduled-posts", REDIS_URL, {
 });
 
 // Add error handlers for all queues
+let redisConnected = true;
 [contentGenerationQueue, publishingQueue, scheduledPostQueue].forEach(queue => {
   queue.on('error', (error) => {
-    console.error(`❌ Queue error in ${queue.name}:`, error.message);
+    if (error.message.includes('ECONNREFUSED')) {
+      if (redisConnected) {
+        console.error(`❌ Redis not available. Queue features (content generation, publishing) will not work until Redis is started.`);
+        console.error(`   To start Redis: redis-server or docker run -d -p 6379:6379 redis:7-alpine`);
+        redisConnected = false;
+      }
+    } else {
+      console.error(`❌ Queue error in ${queue.name}:`, error.message);
+    }
+  });
+  
+  queue.on('ready', () => {
+    if (!redisConnected) {
+      console.log(`✅ Redis connection restored. Queue features are now available.`);
+      redisConnected = true;
+    }
   });
   
   queue.on('failed', (job, error) => {
@@ -90,6 +106,10 @@ contentGenerationQueue.process(async (job) => {
   try {
     await job.progress(10);
     
+    // Get user to access their API key
+    const user = await storage.getUser(data.userId);
+    if (!user) throw new Error("User not found");
+    
     // Get keyword if specified
     let keyword = null;
     if (data.keywordId) {
@@ -98,19 +118,25 @@ contentGenerationQueue.process(async (job) => {
 
     await job.progress(20);
 
-    // Generate content
+    // Generate content using user's own API key if configured
     const content = await generateSEOContent(
       keyword?.keyword || "general topic",
-      data.wordCount
+      data.wordCount,
+      user.openaiApiKey,
+      user.useOwnOpenAiKey || false
     );
 
     await job.progress(50);
 
-    // Generate images if requested
+    // Generate images if requested (only for paid users or users with their own API key)
     let images: Array<{ url: string; altText: string }> = [];
-    if (data.generateImages) {
+    if (data.generateImages && (user.subscriptionPlan === "paid" || user.useOwnOpenAiKey)) {
       const imagePrompts = [`Featured image for ${keyword?.keyword || "article"}`];
-      images = await generateMultipleImages(imagePrompts);
+      images = await generateMultipleImages(
+        imagePrompts,
+        user.openaiApiKey,
+        user.useOwnOpenAiKey || false
+      );
     }
 
     await job.progress(70);
