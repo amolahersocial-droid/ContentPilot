@@ -245,6 +245,8 @@ Return ONLY a JSON object with this structure:
     subject: string;
     body: string;
     replyTo?: string;
+    fromEmail?: string;
+    fromName?: string;
   }): Promise<{ success: boolean; messageId?: string; error?: string }> {
     if (!this.transporter) {
       return {
@@ -254,13 +256,17 @@ Return ONLY a JSON object with this structure:
     }
 
     try {
+      // Use customer's email if provided, otherwise fall back to platform email
+      const senderEmail = params.fromEmail || this.config.fromEmail;
+      const senderName = params.fromName || this.config.fromName;
+
       const info = await this.transporter.sendMail({
-        from: `"${this.config.fromName}" <${this.config.fromEmail}>`,
+        from: `"${senderName}" <${senderEmail}>`,
         to: params.to,
         subject: params.subject,
         text: params.body,
         html: params.body.replace(/\n/g, "<br>"),
-        replyTo: params.replyTo || this.config.fromEmail,
+        replyTo: params.replyTo || senderEmail,
       });
 
       return {
