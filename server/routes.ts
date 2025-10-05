@@ -997,7 +997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // SMTP Credentials Routes
+  // LEGACY: SMTP Credentials Routes (commented out - using Gmail OAuth via Replit connector now)
+  /*
   app.post("/api/outreach/smtp/verify", requireAuth, requirePaidPlan, async (req, res) => {
     try {
       const { provider, email, password, smtpHost, smtpPort } = req.body;
@@ -1084,6 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: error.message });
     }
   });
+  */
 
   // Outreach Campaign Routes
   app.post("/api/outreach/campaigns", requireAuth, requirePaidPlan, async (req, res) => {
@@ -1274,11 +1276,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/outreach/campaigns/:id/send", requireAuth, requirePaidPlan, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-      const { outreachCampaigns, outreachContacts, outreachEmails, smtpCredentials: smtpCreds } = await import("@shared/schema");
+      const { outreachCampaigns, outreachContacts, outreachEmails } = await import("@shared/schema");
       const { db } = await import("./db");
       const { eq, and } = await import("drizzle-orm");
       
-      const { smtpCredentialId, emailTemplate } = req.body;
+      const { emailTemplate } = req.body;
       
       const [campaign] = await db
         .select()
@@ -1311,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const trackingId = crypto.randomUUID();
           
-          const result = await smtpService.sendEmail(smtpCredentialId, {
+          const result = await smtpService.sendEmail({
             to: contact.contactEmail,
             subject: personalized.subject,
             html: personalized.body,
