@@ -50,6 +50,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================================
   
   // Shopify app installation entry point
+  // Shopify config for frontend
+  app.get("/api/shopify/config", (req, res) => {
+    return res.json({ 
+      apiKey: process.env.SHOPIFY_API_KEY || "",
+    });
+  });
+
   app.get("/api/auth/shopify", async (req, res) => {
     try {
       const shop = req.query.shop as string;

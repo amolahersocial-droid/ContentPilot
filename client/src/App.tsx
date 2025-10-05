@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ModeProvider } from "@/contexts/ModeContext";
+import { ShopifyProvider } from "@/contexts/ShopifyProvider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -18,6 +20,8 @@ import ContentQueue from "@/pages/ContentQueue";
 import Backlinks from "@/pages/Backlinks";
 import Outreach from "@/pages/Outreach";
 import Settings from "@/pages/Settings";
+import Privacy from "@/pages/Privacy";
+import Support from "@/pages/Support";
 import AdminUsers from "@/pages/admin/Users";
 import AdminSubscriptions from "@/pages/admin/Subscriptions";
 import AdminAnalytics from "@/pages/admin/Analytics";
@@ -134,6 +138,12 @@ function Router() {
           </AppLayout>
         )}
       </Route>
+      <Route path="/privacy">
+        <Privacy />
+      </Route>
+      <Route path="/support">
+        <Support />
+      </Route>
       <Route path="/admin/users">
         {() => (
           <AppLayout>
@@ -166,14 +176,18 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Router />
-            <Toaster />
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <ModeProvider>
+        <ShopifyProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Router />
+                <Toaster />
+              </TooltipProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ShopifyProvider>
+      </ModeProvider>
     </QueryClientProvider>
   );
 }

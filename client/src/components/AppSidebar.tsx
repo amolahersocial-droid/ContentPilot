@@ -27,45 +27,53 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMode } from "@/contexts/ModeContext";
 
 export function AppSidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { isShopifyMode } = useMode();
 
   const userMenuItems = [
     {
       title: "Overview",
       url: "/dashboard",
       icon: Home,
+      shopifyOnly: false,
     },
     {
-      title: "Sites",
+      title: isShopifyMode ? "Blog" : "Sites",
       url: "/dashboard/sites",
       icon: Globe,
+      shopifyOnly: false,
     },
     {
       title: "Keywords",
       url: "/dashboard/keywords",
       icon: Key,
+      shopifyOnly: false,
     },
     {
       title: "Content Queue",
       url: "/dashboard/content",
       icon: FileText,
+      shopifyOnly: false,
     },
     {
       title: "Backlinks",
       url: "/dashboard/backlinks",
       icon: Link2,
       badge: user?.subscriptionPlan === "paid" ? null : "Paid",
+      shopifyOnly: false,
     },
     {
       title: "Outreach",
       url: "/dashboard/outreach",
       icon: Mail,
       badge: user?.subscriptionPlan === "paid" ? null : "Paid",
+      shopifyOnly: false,
     },
-  ];
+  ].filter(item => !isShopifyMode || !item.shopifyOnly);
 
   const adminMenuItems = [
     {
@@ -96,9 +104,11 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-sidebar-foreground">
-              SEO Content
+              RankForge
             </span>
-            <span className="text-xs text-muted-foreground">SaaS Platform</span>
+            <span className="text-xs text-muted-foreground">
+              {isShopifyMode ? "Shopify Edition" : "SEO Platform"}
+            </span>
           </div>
         </div>
       </SidebarHeader>
