@@ -43,7 +43,7 @@ export function GenerateContentDialog({ open, onOpenChange }: GenerateContentDia
 
   const generateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/content/generate", data);
+      const res = await apiRequest("POST", "/api/posts/generate", data);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to generate content");
