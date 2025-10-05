@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -25,10 +32,11 @@ interface SchedulePostDialogProps {
 export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDialogProps) {
   const { toast } = useToast();
   const [autoPublishEnabled, setAutoPublishEnabled] = useState(site.autoPublishEnabled);
+  const [postFrequency, setPostFrequency] = useState<"daily" | "weekly" | "monthly">(site.postFrequency || "daily");
   const [dailyPostTime, setDailyPostTime] = useState(site.dailyPostTime || "09:00");
 
   const updateScheduleMutation = useMutation({
-    mutationFn: async (data: { autoPublishEnabled: boolean; dailyPostTime: string }) => {
+    mutationFn: async (data: { autoPublishEnabled: boolean; postFrequency: string; dailyPostTime: string }) => {
       const res = await apiRequest("PATCH", `/api/sites/${site.id}`, data);
       if (!res.ok) {
         const error = await res.json();
@@ -41,7 +49,7 @@ export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDia
       toast({
         title: "Schedule updated!",
         description: autoPublishEnabled 
-          ? `Daily posts will be published at ${dailyPostTime}`
+          ? `${postFrequency.charAt(0).toUpperCase() + postFrequency.slice(1)} posts will be published at ${dailyPostTime}`
           : "Auto-publishing disabled",
       });
       onOpenChange(false);
@@ -59,6 +67,7 @@ export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDia
     e.preventDefault();
     updateScheduleMutation.mutate({
       autoPublishEnabled,
+      postFrequency,
       dailyPostTime,
     });
   };
@@ -67,9 +76,9 @@ export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Schedule Daily Posts</DialogTitle>
+          <DialogTitle>Schedule Automated Posts</DialogTitle>
           <DialogDescription>
-            Automatically generate and publish content daily for {site.name}
+            Automatically generate and publish content for {site.name}
           </DialogDescription>
         </DialogHeader>
 
@@ -78,7 +87,7 @@ export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDia
             <div className="space-y-0.5">
               <Label htmlFor="auto-publish">Enable Auto-Publishing</Label>
               <p className="text-sm text-muted-foreground">
-                Automatically create and publish one post daily
+                Automatically create and publish posts
               </p>
             </div>
             <Switch
@@ -90,20 +99,39 @@ export function SchedulePostDialog({ open, onOpenChange, site }: SchedulePostDia
           </div>
 
           {autoPublishEnabled && (
-            <div className="space-y-2">
-              <Label htmlFor="post-time">Daily Post Time</Label>
-              <Input
-                id="post-time"
-                type="time"
-                value={dailyPostTime}
-                onChange={(e) => setDailyPostTime(e.target.value)}
-                data-testid="input-post-time"
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                System will randomly select a keyword and create a post at this time
-              </p>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="post-frequency">Posting Frequency</Label>
+                <Select
+                  value={postFrequency}
+                  onValueChange={(value) => setPostFrequency(value as "daily" | "weekly" | "monthly")}
+                >
+                  <SelectTrigger id="post-frequency" data-testid="select-frequency">
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly (Every Monday)</SelectItem>
+                    <SelectItem value="monthly">Monthly (1st of month)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="post-time">Post Time</Label>
+                <Input
+                  id="post-time"
+                  type="time"
+                  value={dailyPostTime}
+                  onChange={(e) => setDailyPostTime(e.target.value)}
+                  data-testid="input-post-time"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  System will randomly select a keyword and create a post at this time
+                </p>
+              </div>
+            </>
           )}
 
           <div className="flex gap-2 justify-end pt-2">

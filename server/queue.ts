@@ -245,16 +245,39 @@ scheduledPostQueue.process(async (job) => {
       return { skipped: true, reason: "Auto-publish disabled" };
     }
 
-    // Check if already published today
+    // Check if already published based on frequency
     const now = new Date();
+    const frequency = site.postFrequency || "daily";
+    
     if (site.lastAutoPublishAt) {
       const lastPublish = new Date(site.lastAutoPublishAt);
-      if (
-        lastPublish.getDate() === now.getDate() &&
-        lastPublish.getMonth() === now.getMonth() &&
-        lastPublish.getFullYear() === now.getFullYear()
-      ) {
-        return { skipped: true, reason: "Already published today" };
+      
+      if (frequency === "daily") {
+        // Check if already published today
+        if (
+          lastPublish.getDate() === now.getDate() &&
+          lastPublish.getMonth() === now.getMonth() &&
+          lastPublish.getFullYear() === now.getFullYear()
+        ) {
+          return { skipped: true, reason: "Already published today" };
+        }
+      } else if (frequency === "weekly") {
+        // Check if already published this week
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+        weekStart.setHours(0, 0, 0, 0);
+        
+        if (lastPublish >= weekStart) {
+          return { skipped: true, reason: "Already published this week" };
+        }
+      } else if (frequency === "monthly") {
+        // Check if already published this month
+        if (
+          lastPublish.getMonth() === now.getMonth() &&
+          lastPublish.getFullYear() === now.getFullYear()
+        ) {
+          return { skipped: true, reason: "Already published this month" };
+        }
       }
     }
 
@@ -319,13 +342,28 @@ export function startScheduler() {
         for (const site of sites) {
           if (!site.autoPublishEnabled) continue;
 
-          // Check if it's time to publish (compare with dailyPostTime)
+          // Check if it's time to publish based on frequency
           const now = new Date();
           const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
           const scheduledTime = site.dailyPostTime || "09:00";
-
-          // If current time matches scheduled time (within the hour)
+          const frequency = site.postFrequency || "daily";
+          
+          let shouldPublish = false;
+          
+          // Check if current time matches scheduled time (within the hour)
           if (currentTime.split(":")[0] === scheduledTime.split(":")[0]) {
+            if (frequency === "daily") {
+              shouldPublish = true;
+            } else if (frequency === "weekly") {
+              // Publish only on Mondays
+              shouldPublish = now.getDay() === 1;
+            } else if (frequency === "monthly") {
+              // Publish only on the 1st of the month
+              shouldPublish = now.getDate() === 1;
+            }
+          }
+
+          if (shouldPublish) {
             await scheduledPostQueue.add({
               siteId: site.id,
               userId: user.id,

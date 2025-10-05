@@ -22,6 +22,7 @@ export const subscriptionPlanEnum = pgEnum("subscription_plan", [
   "paid",
 ]);
 export const siteTypeEnum = pgEnum("site_type", ["wordpress", "shopify"]);
+export const postFrequencyEnum = pgEnum("post_frequency", ["daily", "weekly", "monthly"]);
 export const postStatusEnum = pgEnum("post_status", [
   "draft",
   "scheduled",
@@ -85,6 +86,7 @@ export const sites = pgTable(
     lastCrawledAt: timestamp("last_crawled_at"),
     crawlData: jsonb("crawl_data"),
     autoPublishEnabled: boolean("auto_publish_enabled").notNull().default(false),
+    postFrequency: postFrequencyEnum("post_frequency").default("daily"),
     dailyPostTime: text("daily_post_time").default("09:00"),
     lastAutoPublishAt: timestamp("last_auto_publish_at"),
     createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
