@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,11 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Link2, Crown } from "lucide-react";
+import { Link2, Crown, Plus } from "lucide-react";
+import { AddProspectDialog } from "@/components/AddProspectDialog";
 import type { Backlink } from "@shared/schema";
 
 export default function Backlinks() {
   const { user } = useAuth();
+  const [addProspectOpen, setAddProspectOpen] = useState(false);
 
   const { data: backlinks, isLoading } = useQuery<Backlink[]>({
     queryKey: ["/api/backlinks"],
@@ -79,11 +82,17 @@ export default function Backlinks() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Backlink Helper</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage backlink prospects and outreach campaigns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Backlink Helper</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage backlink prospects and outreach campaigns
+          </p>
+        </div>
+        <Button onClick={() => setAddProspectOpen(true)} data-testid="button-add-prospect-header">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Prospect
+        </Button>
       </div>
 
       {!backlinks || backlinks.length === 0 ? (
@@ -94,7 +103,8 @@ export default function Backlinks() {
             <p className="text-muted-foreground text-center mb-4 max-w-md">
               Start identifying prospects and managing outreach campaigns
             </p>
-            <Button data-testid="button-add-prospect">
+            <Button onClick={() => setAddProspectOpen(true)} data-testid="button-add-prospect">
+              <Plus className="h-4 w-4 mr-2" />
               Add Prospect
             </Button>
           </CardContent>
@@ -150,6 +160,11 @@ export default function Backlinks() {
           </Table>
         </Card>
       )}
+
+      <AddProspectDialog
+        open={addProspectOpen}
+        onOpenChange={setAddProspectOpen}
+      />
     </div>
   );
 }
