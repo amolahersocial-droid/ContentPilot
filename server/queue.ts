@@ -1,0 +1,334 @@
+import Queue from "bull";
+import { storage } from "./storage";
+import { generateSEOContent, generateMultipleImages } from "./services/openai";
+import { validateSEO } from "./services/seo-validator";
+import { WordPressService } from "./services/wordpress";
+import { ShopifyService } from "./services/shopify";
+
+// Initialize Redis connection
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+
+// Create queues
+export const contentGenerationQueue = new Queue("content-generation", REDIS_URL, {
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 2000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 50,
+  },
+});
+
+export const publishingQueue = new Queue("publishing", REDIS_URL, {
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: {
+      type: "fixed",
+      delay: 5000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 50,
+  },
+});
+
+export const scheduledPostQueue = new Queue("scheduled-posts", REDIS_URL, {
+  defaultJobOptions: {
+    attempts: 3,
+    removeOnComplete: true,
+  },
+});
+
+// Job data types
+export interface ContentGenerationJob {
+  postId: string;
+  userId: string;
+  siteId: string;
+  keywordId: string | null;
+  wordCount: number;
+  generateImages: boolean;
+  publishImmediately?: boolean;
+}
+
+export interface PublishingJob {
+  postId: string;
+  userId: string;
+  siteId: string;
+}
+
+export interface ScheduledPostJob {
+  siteId: string;
+  userId: string;
+}
+
+// Content Generation Processor
+contentGenerationQueue.process(async (job) => {
+  const data: ContentGenerationJob = job.data;
+  
+  try {
+    await job.progress(10);
+    
+    // Get keyword if specified
+    let keyword = null;
+    if (data.keywordId) {
+      keyword = await storage.getKeywordById(data.keywordId);
+    }
+
+    await job.progress(20);
+
+    // Generate content
+    const content = await generateSEOContent({
+      keyword: keyword?.keyword || "general topic",
+      wordCount: data.wordCount,
+    });
+
+    await job.progress(50);
+
+    // Generate images if requested
+    let images = [];
+    if (data.generateImages && content.imagePrompts) {
+      images = await generateMultipleImages(content.imagePrompts.slice(0, 3));
+    }
+
+    await job.progress(70);
+
+    // Validate SEO
+    const seoResults = await validateSEO({
+      title: content.title,
+      content: content.content,
+      metaDescription: content.metaDescription,
+      keyword: keyword?.keyword || "",
+      images,
+    });
+
+    await job.progress(90);
+
+    // Update post with generated content
+    await storage.updatePost(data.postId, {
+      title: content.title,
+      content: content.content,
+      metaTitle: content.metaTitle,
+      metaDescription: content.metaDescription,
+      headings: content.headings,
+      images,
+      status: data.publishImmediately ? "scheduled" : "draft",
+      scheduledFor: data.publishImmediately ? new Date() : null,
+    });
+
+    // Create SEO score record
+    await storage.createSeoScore({
+      postId: data.postId,
+      ...seoResults,
+    });
+
+    await job.progress(95);
+
+    // If publish immediately, queue publishing job
+    if (data.publishImmediately) {
+      await publishingQueue.add({
+        postId: data.postId,
+        userId: data.userId,
+        siteId: data.siteId,
+      }, {
+        delay: 2000, // 2 second delay to ensure content is saved
+      });
+    }
+
+    await job.progress(100);
+
+    return { postId: data.postId, status: "completed" };
+  } catch (error: any) {
+    // Update post status to failed
+    await storage.updatePost(data.postId, {
+      status: "failed",
+    });
+    throw error;
+  }
+});
+
+// Publishing Processor
+publishingQueue.process(async (job) => {
+  const data: PublishingJob = job.data;
+
+  try {
+    await job.progress(10);
+
+    const post = await storage.getPostById(data.postId);
+    if (!post) throw new Error("Post not found");
+
+    const site = await storage.getSiteById(data.siteId);
+    if (!site) throw new Error("Site not found");
+
+    await job.progress(30);
+
+    let externalPostId = "";
+    const creds = site.credentials as any;
+
+    if (site.type === "wordpress") {
+      const wp = new WordPressService(site.url, {
+        username: creds.username,
+        appPassword: creds.appPassword,
+      });
+
+      await job.progress(50);
+
+      const publishedPost = await wp.publishPost({
+        title: post.title,
+        content: post.content,
+        excerpt: post.metaDescription || "",
+        featured_media: undefined,
+        meta: {
+          _yoast_wpseo_title: post.metaTitle,
+          _yoast_wpseo_metadesc: post.metaDescription,
+        },
+      });
+
+      externalPostId = publishedPost.id.toString();
+    } else if (site.type === "shopify") {
+      const shopify = new ShopifyService(site.url, {
+        apiKey: creds.apiKey,
+        accessToken: creds.accessToken,
+      });
+
+      await job.progress(50);
+
+      const publishedPost = await shopify.publishBlogPost({
+        title: post.title,
+        body_html: post.content,
+      });
+
+      externalPostId = publishedPost.id.toString();
+    }
+
+    await job.progress(80);
+
+    // Update post status
+    await storage.updatePost(data.postId, {
+      status: "published",
+      publishedAt: new Date(),
+      externalPostId,
+    });
+
+    await job.progress(100);
+
+    return { postId: data.postId, externalPostId, status: "published" };
+  } catch (error: any) {
+    // Mark as failed
+    await storage.updatePost(data.postId, {
+      status: "failed",
+    });
+    throw error;
+  }
+});
+
+// Scheduled Posts Processor (checks daily schedules)
+scheduledPostQueue.process(async (job) => {
+  const data: ScheduledPostJob = job.data;
+
+  try {
+    const site = await storage.getSiteById(data.siteId);
+    if (!site || !site.autoPublishEnabled) {
+      return { skipped: true, reason: "Auto-publish disabled" };
+    }
+
+    // Check if already published today
+    const now = new Date();
+    if (site.lastAutoPublishAt) {
+      const lastPublish = new Date(site.lastAutoPublishAt);
+      if (
+        lastPublish.getDate() === now.getDate() &&
+        lastPublish.getMonth() === now.getMonth() &&
+        lastPublish.getFullYear() === now.getFullYear()
+      ) {
+        return { skipped: true, reason: "Already published today" };
+      }
+    }
+
+    // Get a random keyword for this site
+    const keywords = await storage.getKeywordsByUserId(data.userId);
+    const siteKeywords = keywords.filter(k => k.siteId === data.siteId);
+    
+    if (siteKeywords.length === 0) {
+      return { skipped: true, reason: "No keywords available" };
+    }
+
+    const randomKeyword = siteKeywords[Math.floor(Math.random() * siteKeywords.length)];
+
+    // Create a new post
+    const post = await storage.createPost({
+      userId: data.userId,
+      siteId: data.siteId,
+      keywordId: randomKeyword.id,
+      title: `Auto-generated: ${randomKeyword.keyword}`,
+      content: "",
+      status: "draft",
+    });
+
+    // Queue content generation and immediate publishing
+    await contentGenerationQueue.add({
+      postId: post.id,
+      userId: data.userId,
+      siteId: data.siteId,
+      keywordId: randomKeyword.id,
+      wordCount: 1500,
+      generateImages: true,
+      publishImmediately: true,
+    });
+
+    // Update last auto publish time
+    await storage.updateSite(data.siteId, {
+      lastAutoPublishAt: now,
+    });
+
+    return { postId: post.id, keyword: randomKeyword.keyword };
+  } catch (error: any) {
+    throw error;
+  }
+});
+
+// Start scheduler (runs every hour to check for due posts)
+export function startScheduler() {
+  setInterval(async () => {
+    try {
+      // Get all sites with auto-publish enabled
+      const users = await storage.getAllUsers();
+      for (const user of users) {
+        const sites = await storage.getSitesByUserId(user.id);
+        for (const site of sites) {
+          if (!site.autoPublishEnabled) continue;
+
+          // Check if it's time to publish (compare with dailyPostTime)
+          const now = new Date();
+          const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+          const scheduledTime = site.dailyPostTime || "09:00";
+
+          // If current time matches scheduled time (within the hour)
+          if (currentTime.split(":")[0] === scheduledTime.split(":")[0]) {
+            await scheduledPostQueue.add({
+              siteId: site.id,
+              userId: user.id,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Scheduler error:", error);
+    }
+  }, 60 * 60 * 1000); // Run every hour
+}
+
+// Error handling
+contentGenerationQueue.on("failed", (job, err) => {
+  console.error(`Content generation job ${job.id} failed:`, err.message);
+});
+
+publishingQueue.on("failed", (job, err) => {
+  console.error(`Publishing job ${job.id} failed:`, err.message);
+});
+
+scheduledPostQueue.on("failed", (job, err) => {
+  console.error(`Scheduled post job ${job.id} failed:`, err.message);
+});
+
+console.log("✓ Job queues initialized");

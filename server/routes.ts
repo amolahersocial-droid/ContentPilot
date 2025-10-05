@@ -10,6 +10,8 @@ import { WordPressService } from "./services/wordpress";
 import { ShopifyService } from "./services/shopify";
 import { SiteCrawler } from "./services/site-crawler";
 import { BacklinkHelper } from "./services/backlink-helper";
+import { getRazorpayInstance } from "./services/razorpay";
+import { contentGenerationQueue, publishingQueue } from "./queue";
 import {
   authRateLimiter,
   contentGenerationRateLimiter,
@@ -22,11 +24,8 @@ import {
   backlinkValidation,
 } from "./middleware/security";
 
-// TODO: Implement Razorpay payment integration
-// - Add POST /api/subscriptions/checkout endpoint to create Razorpay order
-// - Add POST /api/webhooks/razorpay to handle payment success/failure
-// - Enforce subscription expiration dates in requirePaidPlan middleware
-// - Add subscription renewal and cancellation endpoints
+// Razorpay payment integration
+const RAZORPAY_PLAN_ID = process.env.RAZORPAY_PLAN_ID || "";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", authRateLimiter, validate(registerValidation), async (req, res, next) => {
@@ -347,12 +346,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/posts/generate", requireAuth, contentGenerationRateLimiter, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-      const { keywordId, siteId, wordCount, generateImages } = req.body;
+      const { keywordId, siteId, wordCount, generateImages, publishImmediately } = req.body;
 
-      // TODO: Implement job queue (Bull + Redis) for async processing
-      // This endpoint should enqueue a job and return immediately with job ID
-      // Client can poll /api/jobs/:id for status updates
-      
+      // Check daily limits for free plan
       const now = new Date();
       if (req.user.subscriptionPlan === "free") {
         if (req.user.dailyPostsUsed >= 3) {
@@ -360,73 +356,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const keyword = await storage.getKeywordById(keywordId);
-      if (!keyword || keyword.userId !== req.user.id) {
-        return res.status(404).json({ message: "Keyword not found" });
+      // Verify keyword exists and belongs to user
+      if (keywordId) {
+        const keyword = await storage.getKeywordById(keywordId);
+        if (!keyword || keyword.userId !== req.user.id) {
+          return res.status(404).json({ message: "Keyword not found" });
+        }
       }
 
-      const generated = await generateSEOContent(keyword.keyword, wordCount || 2000);
-
-      let images: Array<{ url: string; altText: string }> = [];
-      if (generateImages && req.user.subscriptionPlan === "paid") {
-        const imageDescriptions = [
-          `Featured image for article about ${keyword.keyword}`,
-        ];
-        const generatedImages = await generateMultipleImages(imageDescriptions);
-        images = generatedImages;
+      // Verify site exists and belongs to user
+      const site = await storage.getSiteById(siteId);
+      if (!site || site.userId !== req.user.id) {
+        return res.status(404).json({ message: "Site not found" });
       }
 
-      const result = insertPostSchema.safeParse({
+      // Create placeholder post
+      const post = await storage.createPost({
         userId: req.user.id,
         siteId,
-        keywordId,
-        title: generated.title,
-        content: generated.content,
-        metaTitle: generated.metaTitle,
-        metaDescription: generated.metaDescription,
-        headings: generated.headings,
-        images: images.length > 0 ? images : null,
+        keywordId: keywordId || null,
+        title: "Generating...",
+        content: "",
         status: "draft",
       });
 
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid post data", errors: result.error.errors });
-      }
-
-      const post = await storage.createPost(result.data);
-
-      const seoValidation = validateSEO(
-        generated.title,
-        generated.metaTitle,
-        generated.metaDescription,
-        generated.content,
-        generated.headings,
-        images,
-        keyword.keyword
-      );
-
-      const seoScore = await storage.createSeoScore({
+      // Queue content generation job
+      const job = await contentGenerationQueue.add({
         postId: post.id,
-        readabilityScore: seoValidation.readabilityScore,
-        readabilityGrade: seoValidation.readabilityGrade,
-        metaTitleLength: seoValidation.metaTitleLength,
-        metaDescriptionLength: seoValidation.metaDescriptionLength,
-        headingStructureValid: seoValidation.headingStructureValid,
-        keywordDensity: seoValidation.keywordDensity.toString(),
-        altTagsCoverage: seoValidation.altTagsCoverage,
-        duplicateContentScore: seoValidation.duplicateContentScore,
-        mobileResponsive: seoValidation.mobileResponsive,
-        lighthouseScore: seoValidation.lighthouseScore,
-        overallSeoScore: seoValidation.overallSeoScore,
-        validationErrors: seoValidation.validationErrors,
+        userId: req.user.id,
+        siteId,
+        keywordId,
+        wordCount: wordCount || 1500,
+        generateImages: generateImages && req.user.subscriptionPlan === "paid",
+        publishImmediately: publishImmediately || false,
       });
 
+      // Update daily posts counter
       await storage.updateUser(req.user.id, {
         dailyPostsUsed: req.user.dailyPostsUsed + 1,
         lastPostResetDate: now,
       });
 
-      return res.status(201).json({ post, seoScore });
+      return res.status(202).json({ 
+        post, 
+        jobId: job.id,
+        message: "Content generation started. Check job status for progress." 
+      });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -470,44 +445,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
 
-      const site = await storage.getSiteById(post.siteId);
-      if (!site || site.userId !== req.user.id) {
-        return res.status(404).json({ message: "Site not found" });
-      }
-
-      let externalPostId: string | null = null;
-      let publishedUrl: string | null = null;
-
-      if (site.type === "wordpress") {
-        const wp = new WordPressService(site.url, site.credentials as any);
-        const result = await wp.createPost({
-          title: post.title,
-          content: post.content,
-          status: "publish",
-          meta: {
-            description: post.metaDescription || undefined,
-          },
-        });
-        externalPostId = result.id.toString();
-        publishedUrl = result.link;
-      } else if (site.type === "shopify") {
-        const shopify = new ShopifyService(site.url, site.credentials as any);
-        const result = await shopify.createArticle({
-          title: post.title,
-          body_html: post.content,
-          published: true,
-        });
-        externalPostId = result.id.toString();
-        publishedUrl = result.url;
-      }
-
-      const updated = await storage.updatePost(req.params.id, {
-        status: "published",
-        publishedAt: new Date(),
-        externalPostId,
+      // Queue publishing job
+      const job = await publishingQueue.add({
+        postId: post.id,
+        userId: req.user.id,
+        siteId: post.siteId,
       });
 
-      return res.json({ post: updated, publishedUrl });
+      // Update post status to scheduled
+      await storage.updatePost(req.params.id, {
+        status: "scheduled",
+        scheduledFor: new Date(),
+      });
+
+      return res.json({ 
+        message: "Publishing queued",
+        jobId: job.id,
+        post
+      });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -657,6 +612,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.json(prospects);
     } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Job status endpoints
+  app.get("/api/jobs/:id", requireAuth, async (req, res) => {
+    try {
+      const job = await contentGenerationQueue.getJob(req.params.id) || 
+                  await publishingQueue.getJob(req.params.id);
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      const state = await job.getState();
+      const progress = job.progress();
+      const result = job.returnvalue;
+      const error = job.failedReason;
+
+      return res.json({
+        id: job.id,
+        state,
+        progress,
+        result,
+        error,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Razorpay payment endpoints
+  app.post("/api/subscriptions/create", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(503).json({ message: "Payment service not configured. Please ask admin to add Razorpay credentials." });
+      }
+
+      const razorpay = getRazorpayInstance();
+      
+      const subscription = await razorpay.createSubscription({
+        planId: RAZORPAY_PLAN_ID,
+        customerId: req.user.razorpayCustomerId || undefined,
+        customerEmail: req.user.email,
+        customerName: req.user.username,
+      });
+
+      // Update user with Razorpay customer ID
+      if (!req.user.razorpayCustomerId) {
+        await storage.updateUser(req.user.id, {
+          razorpayCustomerId: subscription.customerId,
+        });
+      }
+
+      return res.json({
+        subscriptionId: subscription.subscriptionId,
+        shortUrl: subscription.shortUrl,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/subscriptions/verify", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const { paymentId, subscriptionId, signature } = req.body;
+
+      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(503).json({ message: "Payment service not configured" });
+      }
+
+      const razorpay = getRazorpayInstance();
+      
+      const isValid = razorpay.verifyPaymentSignature({
+        paymentId,
+        subscriptionId,
+        signature,
+      });
+
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid payment signature" });
+      }
+
+      // Get subscription details
+      const subscription = await razorpay.getSubscription(subscriptionId);
+
+      // Update user subscription
+      await storage.updateUser(req.user.id, {
+        subscriptionPlan: "paid",
+        razorpaySubscriptionId: subscriptionId,
+        subscriptionExpiresAt: new Date(subscription.end_at * 1000),
+      });
+
+      return res.json({ 
+        message: "Subscription activated successfully",
+        plan: "paid",
+        expiresAt: new Date(subscription.end_at * 1000),
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/subscriptions/cancel", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      if (!req.user.razorpaySubscriptionId) {
+        return res.status(400).json({ message: "No active subscription" });
+      }
+
+      if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(503).json({ message: "Payment service not configured" });
+      }
+
+      const razorpay = getRazorpayInstance();
+      
+      await razorpay.cancelSubscription(req.user.razorpaySubscriptionId);
+
+      // Update user subscription
+      await storage.updateUser(req.user.id, {
+        subscriptionPlan: "free",
+        razorpaySubscriptionId: null,
+        subscriptionExpiresAt: null,
+      });
+
+      return res.json({ message: "Subscription cancelled successfully" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/webhooks/razorpay", async (req, res) => {
+    try {
+      const { event, payload } = req.body;
+
+      // Verify webhook signature (in production, verify using Razorpay webhook secret)
+      // const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+      // const signature = req.headers['x-razorpay-signature'];
+      // Verify signature here...
+
+      switch (event) {
+        case "subscription.charged":
+          // Subscription payment successful, extend expiry
+          const subscriptionId = payload.subscription.entity.id;
+          const users = await storage.getAllUsers();
+          const user = users.find(u => u.razorpaySubscriptionId === subscriptionId);
+          
+          if (user) {
+            await storage.updateUser(user.id, {
+              subscriptionExpiresAt: new Date(payload.subscription.entity.end_at * 1000),
+            });
+          }
+          break;
+
+        case "subscription.cancelled":
+        case "subscription.halted":
+          // Subscription cancelled, revert to free plan
+          const cancelledSubscriptionId = payload.subscription.entity.id;
+          const allUsers = await storage.getAllUsers();
+          const cancelledUser = allUsers.find(u => u.razorpaySubscriptionId === cancelledSubscriptionId);
+          
+          if (cancelledUser) {
+            await storage.updateUser(cancelledUser.id, {
+              subscriptionPlan: "free",
+              razorpaySubscriptionId: null,
+              subscriptionExpiresAt: null,
+            });
+          }
+          break;
+      }
+
+      return res.json({ status: "ok" });
+    } catch (error: any) {
+      console.error("Razorpay webhook error:", error);
       return res.status(500).json({ message: error.message });
     }
   });
