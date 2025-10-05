@@ -258,9 +258,17 @@ scheduledPostQueue.process(async (job) => {
       }
     }
 
-    // Get a random keyword for this site
+    // Get a random keyword for this site (prioritize high-scoring keywords)
     const keywords = await storage.getKeywordsByUserId(data.userId);
-    const siteKeywords = keywords.filter(k => k.siteId === data.siteId);
+    let siteKeywords = keywords.filter(k => k.siteId === data.siteId);
+    
+    // First try to use high-scoring keywords (score > 70)
+    const highScoreKeywords = siteKeywords.filter(k => k.overallScore && k.overallScore > 70);
+    
+    // Use high-score keywords if available, otherwise use all keywords
+    if (highScoreKeywords.length > 0) {
+      siteKeywords = highScoreKeywords;
+    }
     
     if (siteKeywords.length === 0) {
       return { skipped: true, reason: "No keywords available" };

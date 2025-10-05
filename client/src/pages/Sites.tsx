@@ -3,15 +3,18 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Globe, ExternalLink, RefreshCw, Trash2, Sparkles } from "lucide-react";
+import { Plus, Globe, ExternalLink, RefreshCw, Trash2, Sparkles, Calendar } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Site } from "@shared/schema";
 import { ConnectSiteDialog } from "@/components/ConnectSiteDialog";
+import { SchedulePostDialog } from "@/components/SchedulePostDialog";
 
 export default function Sites() {
   const { toast } = useToast();
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedSite, setSelectedSite] = useState<Site | null>(null);
 
   const { data: sites, isLoading } = useQuery<Site[]>({
     queryKey: ["/api/sites"],
@@ -161,19 +164,34 @@ export default function Sites() {
                     Last crawled: {new Date(site.lastCrawledAt).toLocaleDateString()}
                   </p>
                 )}
-                {site.crawlData && (
+                <div className="flex gap-2">
+                  {site.crawlData && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => autoGenerateKeywordsMutation.mutate(site.id)}
+                      disabled={autoGenerateKeywordsMutation.isPending}
+                      data-testid={`button-auto-keywords-${site.id}`}
+                    >
+                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                      Auto-Keywords
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full"
-                    onClick={() => autoGenerateKeywordsMutation.mutate(site.id)}
-                    disabled={autoGenerateKeywordsMutation.isPending}
-                    data-testid={`button-auto-keywords-${site.id}`}
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedSite(site);
+                      setScheduleDialogOpen(true);
+                    }}
+                    data-testid={`button-schedule-${site.id}`}
                   >
-                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                    Auto-Generate Keywords
+                    <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                    {site.autoPublishEnabled ? `${site.dailyPostTime}` : "Schedule"}
                   </Button>
-                )}
+                </div>
                 <div className="flex gap-2 pt-2">
                   <Button
                     variant="outline"
@@ -206,6 +224,14 @@ export default function Sites() {
         open={connectDialogOpen}
         onOpenChange={setConnectDialogOpen}
       />
+
+      {selectedSite && (
+        <SchedulePostDialog
+          open={scheduleDialogOpen}
+          onOpenChange={setScheduleDialogOpen}
+          site={selectedSite}
+        />
+      )}
     </div>
   );
 }

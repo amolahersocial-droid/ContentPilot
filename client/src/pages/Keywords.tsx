@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pin, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Pin, Trash2, TrendingUp, TrendingDown, Filter } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Keyword } from "@shared/schema";
@@ -20,10 +20,16 @@ import {
 export default function Keywords() {
   const { toast } = useToast();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [showHighScoreOnly, setShowHighScoreOnly] = useState(false);
 
-  const { data: keywords, isLoading } = useQuery<Keyword[]>({
+  const { data: allKeywords, isLoading } = useQuery<Keyword[]>({
     queryKey: ["/api/keywords"],
   });
+
+  // Filter keywords by score if enabled
+  const keywords = showHighScoreOnly 
+    ? allKeywords?.filter(k => k.overallScore && k.overallScore > 70)
+    : allKeywords;
 
   const togglePinMutation = useMutation({
     mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
@@ -76,10 +82,20 @@ export default function Keywords() {
             Discover and track SEO keywords for your content
           </p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)} data-testid="button-add-keyword">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Keyword
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant={showHighScoreOnly ? "default" : "outline"}
+            onClick={() => setShowHighScoreOnly(!showHighScoreOnly)}
+            data-testid="button-filter-score"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Score &gt; 70
+          </Button>
+          <Button onClick={() => setAddDialogOpen(true)} data-testid="button-add-keyword">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Keyword
+          </Button>
+        </div>
       </div>
 
       {!keywords || keywords.length === 0 ? (
