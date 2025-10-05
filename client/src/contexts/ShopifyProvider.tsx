@@ -60,19 +60,27 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
           }
 
           // App Bridge 4.x auto-initializes from the CDN
-          // Check if window.shopify is available
-          if ((window as any).shopify) {
-            console.log('[Shopify] App Bridge initialized from CDN');
-            setAppBridgeReady(true);
-          } else {
-            // Retry in case script is still loading
-            setTimeout(() => {
-              if ((window as any).shopify) {
-                console.log('[Shopify] App Bridge initialized (delayed)');
-                setAppBridgeReady(true);
-              }
-            }, 500);
-          }
+          // The CDN script exposes window.shopify automatically
+          const checkAndInit = () => {
+            if ((window as any).shopify) {
+              console.log('[Shopify] App Bridge initialized from CDN');
+              // App Bridge 4.x is automatically initialized via meta tags
+              // No need to call createApp - the CDN handles it
+              setAppBridgeReady(true);
+            } else {
+              // Retry in case script is still loading
+              setTimeout(() => {
+                if ((window as any).shopify) {
+                  console.log('[Shopify] App Bridge initialized (delayed)');
+                  setAppBridgeReady(true);
+                } else {
+                  console.warn('[Shopify] App Bridge failed to initialize after timeout');
+                }
+              }, 1000);
+            }
+          };
+          
+          checkAndInit();
         };
 
         if (!document.querySelector('script[src*="app-bridge.js"]')) {

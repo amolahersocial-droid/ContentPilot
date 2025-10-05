@@ -7,14 +7,36 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Helper to add Shopify context to requests
+function addShopifyContext(url: string, headers: Record<string, string> = {}): { url: string, headers: Record<string, string> } {
+  const shop = sessionStorage.getItem('shopify_shop');
+  
+  if (shop) {
+    // Add shop as query parameter if not already present
+    const urlObj = new URL(url, window.location.origin);
+    if (!urlObj.searchParams.has('shop')) {
+      urlObj.searchParams.set('shop', shop);
+    }
+    return { url: urlObj.toString(), headers };
+  }
+  
+  return { url, headers };
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const { url: finalUrl, headers: shopifyHeaders } = addShopifyContext(url);
+  
+  const headers = data 
+    ? { "Content-Type": "application/json", ...shopifyHeaders } 
+    : shopifyHeaders;
+
+  const res = await fetch(finalUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +51,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const baseUrl = queryKey.join("/") as string;
+    const { url: finalUrl } = addShopifyContext(baseUrl);
+    
+    const res = await fetch(finalUrl, {
       credentials: "include",
     });
 
