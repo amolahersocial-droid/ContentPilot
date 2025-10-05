@@ -1,17 +1,17 @@
-# Design Guidelines: SEO Content SaaS Platform
+# Design Guidelines: Enterprise SEO Content SaaS Platform
 
 ## Design Approach
 
-**Selected Approach:** Design System with Modern SaaS Patterns
+**Selected Approach:** Hybrid - Material Design System + Industry Leader Inspiration
 
-Drawing inspiration from productivity SaaS leaders like Linear, Notion, and Asana, combined with Material Design principles for data-heavy interfaces. This platform requires clean, efficient workflows for managing complex SEO content operations across multiple sites and dashboards.
+Drawing from enterprise SaaS leaders: Linear (workflow efficiency), Ahrefs (data density), HubSpot (dashboard polish), and SEMrush (analytics sophistication). This platform demands professional credibility and visual mastery to compete at the enterprise level.
 
 **Key Design Principles:**
-- **Clarity over decoration**: Information density without visual clutter
-- **Workflow efficiency**: Minimize clicks, maximize productivity
-- **Data hierarchy**: Clear visual distinction between primary and secondary information
-- **Status transparency**: Always visible usage limits, publishing states, and system health
-- **Professional credibility**: Enterprise-grade polish suitable for B2B SaaS
+- **Enterprise polish**: Pixel-perfect execution with sophisticated micro-interactions
+- **Data transparency**: Advanced visualizations that reveal insights at a glance
+- **Workflow mastery**: Multi-step processes feel effortless and guided
+- **Professional trust**: Visual language that conveys reliability and expertise
+- **Information density**: Show more without overwhelming
 
 ---
 
@@ -19,154 +19,186 @@ Drawing inspiration from productivity SaaS leaders like Linear, Notion, and Asan
 
 ### A. Color Palette
 
-**Dark Mode Primary (Default):**
-- Background Base: 220 15% 8% (deep slate)
-- Surface Elevated: 220 12% 12% (card backgrounds)
-- Surface Accent: 220 10% 16% (hover states)
-- Border Subtle: 220 10% 20% (dividers)
-- Border Interactive: 220 15% 30% (focus states)
+**Dark Mode Primary:**
+- Background Base: 222 15% 6%
+- Surface Elevated: 222 12% 10%
+- Surface Accent: 222 10% 14%
+- Border Subtle: 222 8% 18%
+- Border Interactive: 222 15% 28%
 
-**Brand Colors:**
-- Primary: 260 60% 55% (vibrant purple - CTAs, active states)
-- Primary Hover: 260 60% 50%
-- Success: 142 70% 45% (published posts, successful operations)
-- Warning: 38 90% 55% (pending reviews, approaching limits)
-- Error: 0 70% 55% (failed validations, blocked actions)
+**Brand & Accent Colors:**
+- Primary Purple: 262 65% 58%
+- Primary Hover: 262 65% 52%
+- Secondary Blue: 210 85% 60% (analytics, charts)
+- Success Green: 142 70% 48%
+- Warning Amber: 38 92% 58%
+- Error Red: 0 72% 58%
+- Info Cyan: 190 85% 55% (backlink metrics)
 
-**Text Colors:**
-- Primary Text: 220 10% 95%
-- Secondary Text: 220 8% 70%
-- Muted Text: 220 8% 50%
-- Placeholder: 220 8% 35%
+**Text Hierarchy:**
+- Primary: 222 10% 96%
+- Secondary: 222 8% 72%
+- Tertiary: 222 8% 52%
+- Disabled: 222 8% 32%
 
-**Light Mode:**
-- Background: 0 0% 98%
-- Surface: 0 0% 100%
-- Text Primary: 220 12% 12%
-- Borders: 220 10% 88%
+**Chart Palette (Analytics):**
+- Series 1: 262 65% 58% (purple)
+- Series 2: 210 85% 60% (blue)
+- Series 3: 142 70% 48% (green)
+- Series 4: 38 92% 58% (amber)
+- Series 5: 190 85% 55% (cyan)
 
 ### B. Typography
 
 **Font Families:**
-- Primary: 'Inter', -apple-system, system-ui, sans-serif (UI, body text)
-- Monospace: 'Fira Code', 'Courier New', monospace (API keys, code snippets)
+- UI/Body: 'Inter', system-ui, sans-serif
+- Display: 'Inter', with tighter letter-spacing (-0.02em)
+- Mono: 'JetBrains Mono', monospace
 
 **Type Scale:**
-- Display: 32px/40px, font-weight 700 (dashboard headers)
-- Heading 1: 24px/32px, font-weight 600 (section titles)
-- Heading 2: 20px/28px, font-weight 600 (card headers)
-- Heading 3: 16px/24px, font-weight 600 (subsection titles)
-- Body Large: 16px/24px, font-weight 400 (primary content)
-- Body: 14px/20px, font-weight 400 (standard text)
-- Caption: 12px/16px, font-weight 500 (labels, metadata)
-- Small: 11px/16px, font-weight 500 (helper text)
+- Hero Display: 48px/56px, weight 700, tracking -0.02em
+- Dashboard Title: 32px/40px, weight 700
+- Section Header: 24px/32px, weight 600
+- Card Header: 18px/26px, weight 600
+- Subheading: 16px/24px, weight 600
+- Body Large: 16px/24px, weight 400
+- Body: 14px/20px, weight 400
+- Caption: 13px/18px, weight 500
+- Label: 12px/16px, weight 600, uppercase, tracking 0.05em
 
 ### C. Layout System
 
-**Spacing Primitives:** Tailwind units of 2, 4, 6, 8, 12, 16, 20, 24
-- Tight spacing: gap-2, p-2 (table cells, compact lists)
-- Standard spacing: gap-4, p-4 (cards, forms)
-- Generous spacing: gap-8, p-8 (sections, dashboard panels)
-- Section spacing: py-12, py-16, py-20 (major divisions)
+**Spacing Primitives:** Tailwind units of 2, 4, 6, 8, 12, 16, 20, 24, 32
 
-**Grid System:**
-- Dashboard: 12-column grid with 24px gutters
-- Sidebar: Fixed 280px width (collapsible on mobile)
-- Main content: flex-1 with max-w-7xl container
-- Cards: Grid with responsive columns (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+**Grid Architecture:**
+- Main Layout: Sidebar (280px fixed) + Content (flex-1 max-w-[1600px])
+- Dashboard Grid: 12-column with 24px gaps
+- Card Grids: 1/2/3 column responsive (grid-cols-1 md:grid-cols-2 xl:grid-cols-3)
+- Analytics Panels: 8-column nested grids for complex layouts
 
 ### D. Component Library
 
-**Navigation & Structure:**
-- **Sidebar Navigation:** Fixed left sidebar with icon + label, active state with purple accent bar, collapsible sections for multi-level menus
-- **Top Bar:** Breadcrumbs, global search, notification bell, user avatar dropdown, current plan badge
-- **Tabs:** Underline style with purple indicator, used for dashboard sections (Overview, Keywords, Content Queue, Sites)
+**Navigation & Chrome:**
+- **Sidebar:** Fixed, collapsible, icon labels, active state with purple gradient bar, nested dropdowns for site switching
+- **Top Command Bar:** Global search (⌘K), breadcrumbs, notification center, plan badge, user menu
+- **Sub-navigation:** Horizontal tabs with purple indicator, secondary actions right-aligned
+- **Site Switcher:** Dropdown with search, site favicons, quick stats per site
 
-**Data Display:**
-- **Data Tables:** Zebra striping (subtle), sortable columns, row actions on hover, pagination controls, selectable rows with checkboxes
-- **Stat Cards:** Large number display with label, trend indicator (↑/↓ with percentage), sparkline micro-charts, color-coded by status
-- **Progress Bars:** Usage limits (thin 4px bars), multi-segment for plan tiers, color transitions at threshold points (70% yellow, 90% red)
-- **Status Badges:** Pill-shaped with dot indicator, semantic colors (Draft/Warning, Published/Success, Failed/Error, Scheduled/Info)
-- **Keyword Score Cards:** Large score circle (0-100), difficulty meter, search volume with abbreviations (10K, 1.5M)
+**Advanced Data Display:**
+- **Analytics Dashboard:** Multi-metric cards with sparklines, comparison periods, trend arrows, percentage changes in colored pills
+- **Keyword Research Table:** Sortable columns (Keyword, Volume, Difficulty, CPC, SERP Features), expandable rows for SERP analysis, bulk action toolbar, export dropdown
+- **Content Calendar:** Month/week/day views, drag-drop scheduling, color-coded by post status, hover previews
+- **Backlink Campaign Manager:** Pipeline stages (Prospecting → Outreach → Negotiation → Live), kanban cards with domain authority, response rate metrics, email thread preview
+- **SEO Score Gauge:** Circular progress (0-100), color gradient (red→amber→green), breakdown sections (Content, Technical, Backlinks, UX)
+- **Competitor Analysis Grid:** Side-by-side metrics cards, diff indicators, ranking position charts
+
+**Content Generation Workflow:**
+- **Step Wizard:** Progress indicator (4 steps), persistent sidebar, next/back navigation, save draft at any step
+- **AI Prompt Builder:** Multi-select keyword chips, tone selector (Professional/Casual/Technical), length slider, custom instructions textarea
+- **Content Editor:** Rich text with formatting toolbar, live SEO score panel, readability metrics, AI enhancement suggestions, image insertion with DALL-E panel
+- **Preview Panel:** Mobile/tablet/desktop toggle, live rendering, meta tag preview (Google SERP simulator)
 
 **Forms & Inputs:**
-- **Text Fields:** Dark backgrounds (220 10% 16%), purple focus rings, floating labels on focus, inline validation with icons
-- **Select Dropdowns:** Custom styled with search, multi-select with chips, grouped options for site selection
-- **Toggle Switches:** Purple active state, labels on both sides for clarity
-- **Rich Text Editor:** Toolbar with formatting options, live preview, word count, readability score display
-- **API Key Inputs:** Monospace font, show/hide toggle, copy button, validation status indicator
+- **Input Fields:** Dark surface backgrounds, purple focus rings (ring-2 ring-purple-500/50), floating labels, inline validation icons, helper text below
+- **Advanced Selects:** Multi-select with chips, search filter, grouped options, keyboard navigation
+- **Date Range Picker:** Calendar popup, preset ranges (Last 7/30/90 days, This month/quarter), custom range input
+- **API Configuration:** Code editor with syntax highlighting, test connection button, credential vault dropdown
 
-**Content Generation Interface:**
-- **Keyword Selector:** Multi-select dropdown with search, selected keywords as removable chips, keyword score visible in dropdown
-- **Content Preview Panel:** Side-by-side editor and preview, SEO score breakdown (readability, keyword density, meta tags), collapsible sections
-- **Image Generator:** Thumbnail grid, regenerate button per image, alt text editor inline, DALL-E prompt preview
+**Enterprise Dashboard Widgets:**
+- **Revenue Dashboard:** MRR/ARR cards, revenue chart with plan breakdown, churn rate metrics, expansion revenue tracking
+- **User Activity Feed:** Real-time stream, user avatars, action descriptions, timestamps, grouped by type
+- **System Health Monitor:** Service status indicators (API, Queue, Database), response time graphs, error rate alerts
+- **Content Performance Heatmap:** Calendar view with post volume, engagement metrics on hover, click to drill down
 
-**Admin Dashboard Specific:**
-- **User Management Table:** Expandable rows for site details, quick actions (suspend, upgrade plan), search and filter bar
-- **Revenue Charts:** Line/bar charts with date range selector, plan breakdown pie chart, MRR/ARR display cards
-- **System Health Panel:** Real-time job queue status, API rate limits with progress bars, error logs table with severity levels
-
-**Actions & Feedback:**
-- **Primary Buttons:** Solid purple (260 60% 55%), medium height (h-10), rounded (rounded-lg), font-weight 600
-- **Secondary Buttons:** Outline style with purple border, transparent background
-- **Danger Buttons:** Solid red for destructive actions (delete site, cancel subscription)
-- **Toast Notifications:** Slide in from top-right, auto-dismiss, action button for undo/details, icon + message format
-- **Loading States:** Skeleton screens for data tables, spinner for button actions, progress bar for long operations (content generation)
-
-**Modals & Overlays:**
-- **Modal Dialogs:** Centered with backdrop blur, rounded-xl corners, close icon top-right, footer with action buttons
-- **Slideouts:** Right-side panel for forms (new site connection, keyword research), overlay backdrop, 480px width
-- **Tooltips:** Dark background, white text, arrow pointer, appear on hover with 200ms delay
+**Actions & Overlays:**
+- **Primary Buttons:** Solid purple, h-10, rounded-lg, weight 600, hover lift (shadow-lg)
+- **Ghost Buttons:** Transparent with hover fill, used for secondary actions
+- **Icon Buttons:** 40px square, hover background, tooltips on all icons
+- **Modal Dialogs:** Max-w-2xl, backdrop blur-md, slide-fade animation, sticky footer with actions
+- **Slide Panels:** Right-edge, 640px width, for forms and detail views
+- **Command Palette:** Searchable actions (⌘K), recent items, keyboard shortcuts
+- **Toast System:** Top-right stack, auto-dismiss 5s, action buttons, progress bar for loading states
 
 ### E. Animations
 
-**Minimal & Purposeful:**
-- Page transitions: Fade in 150ms for content loading
-- Button clicks: Scale 0.98 on active state (duration-100)
-- Hover states: Smooth color transitions (transition-colors duration-200)
-- Dropdown menus: Slide down with fade (translate-y-2 to translate-y-0, 200ms)
-- Modal overlays: Backdrop fade + content scale (scale-95 to scale-100, 300ms)
+**Purposeful Motion:**
+- Page loads: Content fade-in stagger (100ms delay per section)
+- Table rows: Slide-in on scroll (transform translate-y)
+- Charts: Draw-in animation on mount (800ms ease-out)
+- Hover cards: Subtle lift (translateY(-2px) + shadow, 200ms)
+- Button clicks: Scale pulse (0.95 → 1, 150ms)
+- Modals: Backdrop fade + content scale (300ms ease-out)
+- Drag-drop: Smooth reorder with spring physics
 
-**No continuous animations** - all motion is response to user interaction.
-
----
-
-## Dashboard-Specific Layouts
-
-### User Dashboard
-**Hero Section:** Full-width stat banner with 4 cards (Sites Connected, Posts Published This Month, Keywords Tracked, Plan Usage), gradient background (subtle purple tint)
-
-**Main Content:** Tab navigation (Overview | Keywords | Content Queue | Sites | Backlinks), each tab loads content in main area without page reload
-
-**Keyword Management Page:** Search bar + filters at top, data table with columns (Keyword, Volume, Difficulty, Score, Actions), bulk actions toolbar, "Add Keyword" CTA button (purple, prominent)
-
-**Content Queue:** Kanban-style columns (Draft | Scheduled | Published | Failed), drag-to-reorder cards, each card shows post title, target keyword, SEO score badge, thumbnail, scheduled time
-
-### Admin Dashboard
-**Global Overview:** Large KPI cards (Total Users, Active Subscriptions, MRR, Content Generated Today), revenue chart below, recent user activity feed on right sidebar
-
-**User Management:** Searchable table with filters (Plan, Status, Registration Date), expandable rows showing user's connected sites, inline actions (Edit Plan, Suspend, Refund)
+**No ambient animations** - all motion tied to user interaction or data updates.
 
 ---
 
 ## Images
 
-**Dashboard Illustrations:**
-- Empty states: Friendly illustrations for "No sites connected yet", "No keywords tracked", "Content queue is empty" - use simple line art style in purple accent colors
-- Onboarding: Step-by-step guide with screenshots/illustrations showing how to connect first site
+**Marketing Landing Page:**
+- **Hero Section:** Full-width screenshot (1440x800px) showing main dashboard with keyword research table and analytics charts, subtle purple gradient overlay, 3D perspective tilt (8deg rotation)
+- **Feature Showcases:** UI screenshots for each major feature (content editor, backlink outreach, analytics), Mac browser window frame, shadow-2xl depth
+- **Social Proof:** Customer logos grid (grayscale, colored on hover), testimonial cards with headshots
 
-**Marketing/Landing Page (if needed):**
-- Hero: Large screenshot of dashboard showing keyword management interface, subtle drop shadow, tilted perspective (3D effect)
-- Feature sections: Smaller UI screenshots demonstrating specific features (content generation, SEO scoring, publishing workflow)
+**Application Empty States:**
+- **No Sites Connected:** Illustration of connected nodes/sites, purple accent color, call-to-action button below
+- **Empty Content Queue:** Document stack illustration with sparkles (AI theme)
+- **No Backlinks:** Chain link illustration, outreach envelope graphic
+- Use simple line art style, consistent visual language
 
-**No decorative images in functional dashboards** - prioritize data clarity and workflow efficiency.
+**Dashboard Visualizations:**
+- All charts use live data rendering (no static images)
+- Screenshots only for onboarding tutorials and help documentation
 
 ---
 
-## Accessibility
+## Data Visualization Standards
 
-- WCAG 2.1 AA compliant contrast ratios for all text/background combinations
-- Keyboard navigation: Tab through all interactive elements, Enter to activate, Escape to close modals
-- Screen reader: ARIA labels for icons, role attributes for custom components, live regions for toast notifications
-- Focus indicators: 2px purple outline (ring-2 ring-purple-500) on all interactive elements
-- Color is never the only indicator: Use icons + text for status (not just color-coded badges)
+**Chart Types:**
+- Line charts: Smooth curves for trends, dotted comparison periods
+- Bar charts: Rounded corners, gradient fills, grouped for plan comparisons
+- Donut charts: Center metric display, hover segment highlighting
+- Heatmaps: Color scale with legend, cell tooltips
+- Sparklines: Micro-charts in table cells, gradient fills
+
+**Interaction Patterns:**
+- Hover tooltips: Dark background, precise data point, timestamp
+- Zoom controls: Date range brush selection
+- Legend toggles: Click to show/hide series
+- Export actions: Download CSV/PNG from chart toolbar
+
+**Performance Metrics:**
+- Traffic gauges: Radial progress with target line
+- Ranking positions: Vertical timeline with position changes
+- Conversion funnels: Stepped bar chart with drop-off rates
+
+---
+
+## Accessibility & Polish
+
+- WCAG AA contrast ratios (all text 4.5:1 minimum)
+- Keyboard shortcuts displayed in tooltips (⌘K, ⌘S, ESC, etc.)
+- Focus indicators: 2px purple ring on all interactive elements
+- Loading skeletons match final content layout
+- Error states include recovery actions, not just error messages
+- Success confirmations with undo option where applicable
+- All icons paired with labels or tooltips
+- Screen reader announcements for dynamic content updates
+
+---
+
+## Enterprise Differentiators
+
+**Trust Signals:**
+- Real-time sync indicators (last updated timestamps)
+- Data source badges (Google Search Console verified, Ahrefs API)
+- Compliance badges (SOC 2, GDPR) in footer
+- Uptime status page link in header
+
+**Professional Polish:**
+- Consistent 8px border-radius on cards
+- Uniform shadow elevations (shadow-sm/md/lg/xl)
+- Smooth transitions on all state changes
+- No layout shifts during loading
+- Optimistic UI updates (immediate feedback, background sync)
