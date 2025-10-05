@@ -4,6 +4,7 @@ import {
   Key,
   FileText,
   Link2,
+  Mail,
   Settings,
   Users,
   DollarSign,
@@ -56,6 +57,12 @@ export function AppSidebar() {
       title: "Backlinks",
       url: "/dashboard/backlinks",
       icon: Link2,
+      badge: user?.subscriptionPlan === "paid" ? null : "Paid",
+    },
+    {
+      title: "Outreach",
+      url: "/dashboard/outreach",
+      icon: Mail,
       badge: user?.subscriptionPlan === "paid" ? null : "Paid",
     },
   ];

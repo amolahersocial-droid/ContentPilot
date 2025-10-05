@@ -16,6 +16,7 @@ import Sites from "@/pages/Sites";
 import Keywords from "@/pages/Keywords";
 import ContentQueue from "@/pages/ContentQueue";
 import Backlinks from "@/pages/Backlinks";
+import Outreach from "@/pages/Outreach";
 import Settings from "@/pages/Settings";
 import AdminUsers from "@/pages/admin/Users";
 import AdminSubscriptions from "@/pages/admin/Subscriptions";
@@ -116,6 +117,13 @@ function Router() {
         {() => (
           <AppLayout>
             <ProtectedRoute component={Backlinks} />
+          </AppLayout>
+        )}
+      </Route>
+      <Route path="/dashboard/outreach">
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Outreach} />
           </AppLayout>
         )}
       </Route>
