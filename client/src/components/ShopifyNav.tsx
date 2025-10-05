@@ -4,12 +4,13 @@ export function ShopifyNav() {
   return (
     <NavMenu>
       {/* First element required - not rendered as link */}
-      <a href="/" rel="home">Home</a>
-      <a href="/sites">Sites</a>
-      <a href="/content">Content</a>
-      <a href="/seo">SEO Validator</a>
-      <a href="/backlinks">Backlinks</a>
-      <a href="/settings">Settings</a>
+      <a href="/dashboard" rel="home">Home</a>
+      <a href="/dashboard/sites">Sites</a>
+      <a href="/dashboard/keywords">Keywords</a>
+      <a href="/dashboard/content">Content</a>
+      <a href="/dashboard/backlinks">Backlinks</a>
+      <a href="/dashboard/outreach">Outreach</a>
+      <a href="/dashboard/settings">Settings</a>
     </NavMenu>
   );
 }

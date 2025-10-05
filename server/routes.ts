@@ -175,22 +175,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GDPR webhooks
+  // GDPR webhooks - with HMAC verification
   app.post("/api/webhooks/shopify/customers/data_request", async (req, res) => {
-    // Return customer data
-    res.status(200).send("OK");
+    try {
+      // Verify HMAC from Shopify webhook
+      const hmac = req.headers['x-shopify-hmac-sha256'] as string;
+      const body = JSON.stringify(req.body);
+      
+      if (!hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      const generatedHash = crypto
+        .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
+        .update(body)
+        .digest('base64');
+
+      if (generatedHash !== hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      // Log the data request - merchant will need to provide customer data
+      const { shop_id, shop_domain, customer, orders_requested } = req.body;
+      console.log(`[GDPR] Customer data request:`, {
+        shop: shop_domain,
+        customerId: customer?.id,
+        customerEmail: customer?.email,
+        ordersRequested: orders_requested
+      });
+
+      // TODO: Implement actual customer data export
+      // For now, we acknowledge the request
+      res.status(200).send("OK");
+    } catch (error: any) {
+      console.error("[GDPR] Data request error:", error);
+      res.status(500).send("Error");
+    }
   });
 
   app.post("/api/webhooks/shopify/customers/redact", async (req, res) => {
-    // Delete customer data
-    res.status(200).send("OK");
+    try {
+      // Verify HMAC from Shopify webhook
+      const hmac = req.headers['x-shopify-hmac-sha256'] as string;
+      const body = JSON.stringify(req.body);
+      
+      if (!hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      const generatedHash = crypto
+        .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
+        .update(body)
+        .digest('base64');
+
+      if (generatedHash !== hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      // Delete customer data
+      const { shop_id, shop_domain, customer } = req.body;
+      console.log(`[GDPR] Redacting customer data:`, {
+        shop: shop_domain,
+        customerId: customer?.id,
+        customerEmail: customer?.email
+      });
+
+      // Delete any customer-related data from our database
+      // Note: We currently don't store customer data separately, 
+      // but this is where you would delete it if we did
+      
+      res.status(200).send("OK");
+    } catch (error: any) {
+      console.error("[GDPR] Customer redact error:", error);
+      res.status(500).send("Error");
+    }
   });
 
   app.post("/api/webhooks/shopify/shop/redact", async (req, res) => {
-    // Delete all shop data
-    const shop = req.body.shop_domain;
-    await db.delete(shops).where(eq(shops.shop, shop));
-    res.status(200).send("OK");
+    try {
+      // Verify HMAC from Shopify webhook
+      const hmac = req.headers['x-shopify-hmac-sha256'] as string;
+      const body = JSON.stringify(req.body);
+      
+      if (!hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      const generatedHash = crypto
+        .createHmac('sha256', process.env.SHOPIFY_API_SECRET || '')
+        .update(body)
+        .digest('base64');
+
+      if (generatedHash !== hmac) {
+        return res.status(401).send("Unauthorized");
+      }
+
+      // Delete all shop data
+      const { shop_id, shop_domain } = req.body;
+      console.log(`[GDPR] Redacting shop data:`, {
+        shop: shop_domain,
+        shopId: shop_id
+      });
+
+      // Delete shop and all related data
+      await db.delete(shops).where(eq(shops.shop, shop_domain));
+      
+      res.status(200).send("OK");
+    } catch (error: any) {
+      console.error("[GDPR] Shop redact error:", error);
+      res.status(500).send("Error");
+    }
   });
 
   // ========================================
