@@ -78,7 +78,18 @@ export async function generateSEOContent(
       throw new Error("Invalid OpenAI response: no content generated");
     }
 
-    const result = JSON.parse(response.choices[0].message.content);
+    let content = response.choices[0].message.content;
+    
+    // Remove markdown code blocks if present (```json ... ```)
+    content = content.replace(/```json\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+    
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error("Failed to parse OpenAI response:", content);
+      throw new Error(`Failed to parse OpenAI response as JSON: ${(parseError as Error).message}`);
+    }
     
     if (!result.title || !result.content) {
       throw new Error("Generated content missing required fields");
