@@ -39,20 +39,20 @@ export class RazorpayService {
         customerId = customer.id;
       }
 
-      // Create subscription
+      // Create subscription (Razorpay SDK types may not be complete, using 'as any')
       const subscription = await this.razorpay.subscriptions.create({
         plan_id: params.planId,
         customer_id: customerId,
-        total_count: params.totalCount || 12, // Default 12 months
+        total_count: params.totalCount || 12,
         quantity: 1,
-        notify: 1, // Send notifications
-      });
+        notify: 1,
+      } as any);
 
       return {
-        subscriptionId: subscription.id,
+        subscriptionId: (subscription as any).id,
         customerId,
-        status: subscription.status,
-        shortUrl: subscription.short_url,
+        status: (subscription as any).status,
+        shortUrl: (subscription as any).short_url,
       };
     } catch (error: any) {
       throw new Error(`Razorpay subscription creation failed: ${error.message}`);

@@ -78,29 +78,32 @@ contentGenerationQueue.process(async (job) => {
     await job.progress(20);
 
     // Generate content
-    const content = await generateSEOContent({
-      keyword: keyword?.keyword || "general topic",
-      wordCount: data.wordCount,
-    });
+    const content = await generateSEOContent(
+      keyword?.keyword || "general topic",
+      data.wordCount
+    );
 
     await job.progress(50);
 
     // Generate images if requested
-    let images = [];
-    if (data.generateImages && content.imagePrompts) {
-      images = await generateMultipleImages(content.imagePrompts.slice(0, 3));
+    let images: Array<{ url: string; altText: string }> = [];
+    if (data.generateImages) {
+      const imagePrompts = [`Featured image for ${keyword?.keyword || "article"}`];
+      images = await generateMultipleImages(imagePrompts);
     }
 
     await job.progress(70);
 
     // Validate SEO
-    const seoResults = await validateSEO({
-      title: content.title,
-      content: content.content,
-      metaDescription: content.metaDescription,
-      keyword: keyword?.keyword || "",
+    const seoResults = validateSEO(
+      content.title,
+      content.metaTitle,
+      content.metaDescription,
+      content.content,
+      content.headings,
       images,
-    });
+      keyword?.keyword || ""
+    );
 
     await job.progress(90);
 
@@ -119,7 +122,18 @@ contentGenerationQueue.process(async (job) => {
     // Create SEO score record
     await storage.createSeoScore({
       postId: data.postId,
-      ...seoResults,
+      readabilityScore: seoResults.readabilityScore,
+      readabilityGrade: seoResults.readabilityGrade,
+      metaTitleLength: seoResults.metaTitleLength,
+      metaDescriptionLength: seoResults.metaDescriptionLength,
+      headingStructureValid: seoResults.headingStructureValid,
+      keywordDensity: seoResults.keywordDensity.toString(),
+      altTagsCoverage: seoResults.altTagsCoverage,
+      duplicateContentScore: seoResults.duplicateContentScore,
+      mobileResponsive: seoResults.mobileResponsive,
+      lighthouseScore: seoResults.lighthouseScore,
+      overallSeoScore: seoResults.overallSeoScore,
+      validationErrors: seoResults.validationErrors,
     });
 
     await job.progress(95);
@@ -173,14 +187,12 @@ publishingQueue.process(async (job) => {
 
       await job.progress(50);
 
-      const publishedPost = await wp.publishPost({
+      const publishedPost = await wp.createPost({
         title: post.title,
         content: post.content,
-        excerpt: post.metaDescription || "",
-        featured_media: undefined,
+        status: "publish",
         meta: {
-          _yoast_wpseo_title: post.metaTitle,
-          _yoast_wpseo_metadesc: post.metaDescription,
+          description: post.metaDescription || undefined,
         },
       });
 
@@ -193,9 +205,10 @@ publishingQueue.process(async (job) => {
 
       await job.progress(50);
 
-      const publishedPost = await shopify.publishBlogPost({
+      const publishedPost = await shopify.createArticle({
         title: post.title,
         body_html: post.content,
+        published: true,
       });
 
       externalPostId = publishedPost.id.toString();

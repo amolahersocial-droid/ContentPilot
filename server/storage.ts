@@ -55,6 +55,7 @@ export interface IStorage {
   createSeoScore(score: Partial<SeoScore>): Promise<SeoScore>;
   
   getBacklinksByUserId(userId: string): Promise<Backlink[]>;
+  getBacklinkById(id: string): Promise<Backlink | undefined>;
   createBacklink(backlink: InsertBacklink): Promise<Backlink>;
   updateBacklink(id: string, updates: Partial<Backlink>): Promise<Backlink>;
   deleteBacklink(id: string): Promise<void>;
@@ -217,6 +218,11 @@ export class DatabaseStorage implements IStorage {
 
   async getBacklinksByUserId(userId: string): Promise<Backlink[]> {
     return db.select().from(backlinks).where(eq(backlinks.userId, userId));
+  }
+
+  async getBacklinkById(id: string): Promise<Backlink | undefined> {
+    const result = await db.select().from(backlinks).where(eq(backlinks.id, id));
+    return result[0];
   }
 
   async createBacklink(insertBacklink: InsertBacklink): Promise<Backlink> {
