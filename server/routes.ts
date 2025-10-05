@@ -1118,8 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // LEGACY: SMTP Credentials Routes (commented out - using Gmail OAuth via Replit connector now)
-  /*
+  // SMTP Credentials Routes (for backward compatibility and custom SMTP)
   app.post("/api/outreach/smtp/verify", requireAuth, requirePaidPlan, async (req, res) => {
     try {
       const { provider, email, password, smtpHost, smtpPort } = req.body;
@@ -1206,7 +1205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: error.message });
     }
   });
-  */
 
   // Outreach Campaign Routes
   app.post("/api/outreach/campaigns", requireAuth, requirePaidPlan, async (req, res) => {
