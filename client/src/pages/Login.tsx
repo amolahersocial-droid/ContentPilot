@@ -36,7 +36,7 @@ export default function Login() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground text-center">
-            Automated SEO content generation and publishing for WordPress sites.
+            Automated SEO content generation and publishing for your sites.
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">

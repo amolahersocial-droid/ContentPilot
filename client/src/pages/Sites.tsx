@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Globe, ExternalLink, RefreshCw, Trash2, Sparkles, Calendar } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useMode } from "@/contexts/ModeContext";
 import type { Site } from "@shared/schema";
 import { ConnectSiteDialog } from "@/components/ConnectSiteDialog";
 import { SchedulePostDialog } from "@/components/SchedulePostDialog";
 
 export default function Sites() {
   const { toast } = useToast();
+  const { isShopifyMode } = useMode();
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
@@ -94,9 +96,13 @@ export default function Sites() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Connected Sites</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isShopifyMode ? "Blog Content" : "Connected Sites"}
+          </h1>
           <p className="text-muted-foreground mt-2">
-            Manage your WordPress and Shopify integrations
+            {isShopifyMode 
+              ? "Manage your Shopify blog content" 
+              : "Manage your WordPress and Shopify integrations"}
           </p>
         </div>
         <Button
@@ -114,7 +120,9 @@ export default function Sites() {
             <Globe className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-lg font-semibold mb-2">No sites connected</h3>
             <p className="text-muted-foreground text-center mb-4 max-w-md">
-              Connect your WordPress or Shopify site to start generating SEO-optimized content
+              {isShopifyMode 
+                ? "Start generating SEO-optimized blog content for your Shopify store" 
+                : "Connect your WordPress or Shopify site to start generating SEO-optimized content"}
             </p>
             <Button onClick={() => setConnectDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -165,7 +173,7 @@ export default function Sites() {
                   </p>
                 )}
                 <div className="flex gap-2">
-                  {site.crawlData && (
+                  {site.crawlData && (site.crawlData as any).pages ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -177,7 +185,7 @@ export default function Sites() {
                       <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                       Auto-Keywords
                     </Button>
-                  )}
+                  ) : null}
                   <Button
                     variant="outline"
                     size="sm"

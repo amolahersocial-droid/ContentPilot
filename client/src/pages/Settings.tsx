@@ -112,7 +112,7 @@ export default function Settings() {
         const options = {
           key: data.keyId,
           subscription_id: data.subscriptionId,
-          name: "SEO Content SaaS",
+          name: "RankForge",
           description: "Paid Subscription Plan",
           handler: async function (response: any) {
             try {

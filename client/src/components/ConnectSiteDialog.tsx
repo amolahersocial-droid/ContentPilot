@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useMode } from "@/contexts/ModeContext";
 import { Loader2 } from "lucide-react";
 
 interface ConnectSiteDialogProps {
@@ -29,7 +30,8 @@ interface ConnectSiteDialogProps {
 
 export function ConnectSiteDialog({ open, onOpenChange }: ConnectSiteDialogProps) {
   const { toast } = useToast();
-  const [siteType, setSiteType] = useState<"wordpress" | "shopify">("wordpress");
+  const { isShopifyMode } = useMode();
+  const [siteType, setSiteType] = useState<"wordpress" | "shopify">(isShopifyMode ? "shopify" : "wordpress");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [wpUsername, setWpUsername] = useState("");
@@ -94,7 +96,9 @@ export function ConnectSiteDialog({ open, onOpenChange }: ConnectSiteDialogProps
         <DialogHeader>
           <DialogTitle>Connect a Site</DialogTitle>
           <DialogDescription>
-            Connect your WordPress or Shopify site to start generating content
+            {isShopifyMode 
+              ? "Configure your Shopify blog settings" 
+              : "Connect your WordPress or Shopify site to start generating content"}
           </DialogDescription>
         </DialogHeader>
 
@@ -124,11 +128,12 @@ export function ConnectSiteDialog({ open, onOpenChange }: ConnectSiteDialogProps
             />
           </div>
 
-          <Tabs value={siteType} onValueChange={(v) => setSiteType(v as "wordpress" | "shopify")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="wordpress" data-testid="tab-wordpress">WordPress</TabsTrigger>
-              <TabsTrigger value="shopify" data-testid="tab-shopify">Shopify</TabsTrigger>
-            </TabsList>
+          {!isShopifyMode && (
+            <Tabs value={siteType} onValueChange={(v) => setSiteType(v as "wordpress" | "shopify")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="wordpress" data-testid="tab-wordpress">WordPress</TabsTrigger>
+                <TabsTrigger value="shopify" data-testid="tab-shopify">Shopify</TabsTrigger>
+              </TabsList>
 
             <TabsContent value="wordpress" className="space-y-4 mt-4">
               <div className="space-y-2">
@@ -187,7 +192,16 @@ export function ConnectSiteDialog({ open, onOpenChange }: ConnectSiteDialogProps
                 </p>
               </div>
             </TabsContent>
-          </Tabs>
+            </Tabs>
+          )}
+          
+          {isShopifyMode && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Your Shopify store is already connected via the app integration.
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-2 justify-end pt-2">
             <Button
