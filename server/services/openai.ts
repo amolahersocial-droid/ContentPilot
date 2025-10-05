@@ -1,7 +1,15 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const platformOpenAI = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Get OpenAI instance - use user's key if provided and they're on paid plan, otherwise use platform key
+function getOpenAIInstance(userApiKey?: string | null, useOwnKey: boolean = false): OpenAI {
+  if (useOwnKey && userApiKey) {
+    return new OpenAI({ apiKey: userApiKey });
+  }
+  return platformOpenAI;
+}
 
 interface GeneratedPost {
   title: string;
@@ -18,8 +26,11 @@ interface GeneratedImage {
 
 export async function generateSEOContent(
   keyword: string,
-  targetLength: number = 2000
+  targetLength: number = 2000,
+  userApiKey?: string | null,
+  useOwnKey: boolean = false
 ): Promise<GeneratedPost> {
+  const openai = getOpenAIInstance(userApiKey, useOwnKey);
   const prompt = `Create an SEO-optimized blog post for the keyword "${keyword}". 
   
   Requirements:
@@ -82,7 +93,12 @@ export async function generateSEOContent(
   }
 }
 
-export async function generateImage(description: string): Promise<GeneratedImage> {
+export async function generateImage(
+  description: string,
+  userApiKey?: string | null,
+  useOwnKey: boolean = false
+): Promise<GeneratedImage> {
+  const openai = getOpenAIInstance(userApiKey, useOwnKey);
   try {
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -122,8 +138,10 @@ export async function generateImage(description: string): Promise<GeneratedImage
 }
 
 export async function generateMultipleImages(
-  descriptions: string[]
+  descriptions: string[],
+  userApiKey?: string | null,
+  useOwnKey: boolean = false
 ): Promise<GeneratedImage[]> {
-  const imagePromises = descriptions.map((desc) => generateImage(desc));
+  const imagePromises = descriptions.map((desc) => generateImage(desc, userApiKey, useOwnKey));
   return Promise.all(imagePromises);
 }

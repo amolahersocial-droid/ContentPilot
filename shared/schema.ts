@@ -57,6 +57,8 @@ export const users = pgTable("users", {
   razorpayCustomerId: text("razorpay_customer_id"),
   razorpaySubscriptionId: text("razorpay_subscription_id"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  openaiApiKey: text("openai_api_key"),
+  useOwnOpenAiKey: boolean("use_own_openai_key").notNull().default(false),
   dailyPostsUsed: integer("daily_posts_used").notNull().default(0),
   lastPostResetDate: timestamp("last_post_reset_date").default(
     sql`CURRENT_TIMESTAMP`
