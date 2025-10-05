@@ -1,0 +1,40 @@
+[MODE DETECTION] Initializing mode detection {pathname: '/api/login', hasShopParam: false, hasEmbedded: false, isInIframe: false, hasSessionShop: false, …}
+index-DU6v3cdJ.js:48 [MODE DETECTION] ✅ Standalone mode detected
+index-DU6v3cdJ.js:48 [MODE PROVIDER] Initial state {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Initializing {isShopifyMode: false, hasShop: false}
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-DU6v3cdJ.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-DU6v3cdJ.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'standalone', hasGlobalShop: false, willAddShopParam: false}
+index-DU6v3cdJ.js:48 [QUERY CLIENT] Standalone mode - no shop parameter added
+index-DU6v3cdJ.js:48 [QUERY FN] Making fetch
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: false}
+index-DU6v3cdJ.js:288 [SHOPIFY PROVIDER] Not in Shopify mode - skipping App Bridge init
+index-DU6v3cdJ.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-DU6v3cdJ.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/api/login', hasShopParam: false, hasEmbedded: false, isInIframe: false, hasSessionShop: false, …}
+index-DU6v3cdJ.js:48 [MODE DETECTION] ✅ Standalone mode detected
+index-DU6v3cdJ.js:48 [MODE PROVIDER] Updated global mode {mode: 'standalone', hasShop: false, globalAppMode: 'standalone', hasGlobalShop: false}
+index-DU6v3cdJ.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user 401 (Unauthorized)
+(anonymous) @ index-DU6v3cdJ.js:48
+i @ index-DU6v3cdJ.js:48
+w @ index-DU6v3cdJ.js:48
+start @ index-DU6v3cdJ.js:48
+fetch @ index-DU6v3cdJ.js:48
+Uo @ index-DU6v3cdJ.js:48
+onSubscribe @ index-DU6v3cdJ.js:48
+subscribe @ index-DU6v3cdJ.js:48
+(anonymous) @ index-DU6v3cdJ.js:48
+Kg @ index-DU6v3cdJ.js:38
+yl @ index-DU6v3cdJ.js:40
+Os @ index-DU6v3cdJ.js:40
+fh @ index-DU6v3cdJ.js:40
+Pr @ index-DU6v3cdJ.js:38
+_j @ index-DU6v3cdJ.js:40
+Ir @ index-DU6v3cdJ.js:40
+Nv @ index-DU6v3cdJ.js:40
+S @ index-DU6v3cdJ.js:25
+M @ index-DU6v3cdJ.js:25Understand this error
+index-DU6v3cdJ.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-DU6v3cdJ.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Initializing AuthProvider
+index-DU6v3cdJ.js:288 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
