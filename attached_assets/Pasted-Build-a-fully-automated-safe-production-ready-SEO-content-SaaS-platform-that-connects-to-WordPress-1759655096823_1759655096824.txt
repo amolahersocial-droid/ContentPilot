@@ -1,0 +1,179 @@
+Build a fully automated, safe, production-ready SEO content SaaS platform that connects to WordPress and Shopify. The system should include subscription plans, admin control, tiered feature access, and future-proof modular architecture. It should:
+
+1. Multi-Site Connection & Scan
+
+Connect to WordPress via REST API (wp-json/wp/v2/posts) using OAuth or Application Passwords.
+
+Connect to Shopify via Admin API (Articles API for blogs) using private app credentials or OAuth.
+
+Crawl connected sites safely (respect robots.txt) to extract URLs, titles, headings, metadata, internal links, and current keywords.
+
+Provide a visual topic map per connected site.
+
+Allow multiple site connections per account, with site-specific settings.
+
+2. Subscription Plans & Feature Access
+
+Free Plan: limited to 1 site, 1 post/day, basic keyword suggestions, and limited AI content generation.
+
+Paid Plans: configurable (e.g., $X/month), allow multiple sites, multiple posts/day, advanced keyword API integration, AI image generation, SEO analysis, internal linking suggestions, semi-automated backlink outreach.
+
+Feature access must be controlled by plan, with the ability to upgrade/downgrade.
+
+Include payment integration for subscription (Stripe/PayPal).
+
+3. Keyword Discovery & Management
+
+Suggest keywords using:
+
+Seed keywords from the connected site(s)
+
+Paid/free Keyword APIs (Google Keyword Planner, SEMrush, Ahrefs, Moz)
+
+Score keywords: search volume, difficulty, relevance, competitor gap.
+
+Manual keyword pinning and custom keyword addition.
+
+Store all keyword metrics in DB.
+
+Feature access gated by plan:
+
+Free plan: basic keyword suggestions (limited queries/day)
+
+Paid plan: unlimited queries, competitor gap analysis, long-tail keywords.
+
+4. Content Generation & Images
+
+Generate SEO-optimized posts per keyword:
+
+Title, meta title, meta description, headings (H1/H2/H3), body content, conclusion, internal links.
+
+Include LSI keywords automatically.
+
+Generate AI images (hero + inline) using OpenAI DALL·E, Stability AI, or MidJourney; assign alt text automatically.
+
+SEO quality checks: readability (Flesch-Kincaid), duplicate content/plagiarism (optional Copyscape), meta tags, alt tags.
+
+Plan-based access:
+
+Free plan: AI text only, no images.
+
+Paid plan: AI text + images + advanced SEO checks.
+
+5. Publishing Engine
+
+WordPress: create posts (draft/publish), upload media via REST API.
+
+Shopify: create articles via Admin API with images, tags, and categories.
+
+Schedule posts via queue management (Celery / RQ / Bull).
+
+Suggest internal links to previously published posts.
+
+Plan-based limits: number of posts/day controlled by subscription tier.
+
+6. Backlink Helper (Safe & White-hat)
+
+Identify niche-relevant prospects (blogs, resource pages).
+
+Generate semi-automated email outreach sequences for guest posts, resource pages, or expert link requests.
+
+Track responses, manually confirm backlinks, and log status.
+
+Paid plans get full backlink helper features; free plan may only view prospects or track manual outreach.
+
+7. Admin Dashboard & Control
+
+Global Admin (you) can see all user accounts, connected sites, subscription status, usage, generated posts, and keyword metrics.
+
+Can create/modify subscription plans, enable/disable features, and view analytics.
+
+Users see only their account, sites, and allowed features based on plan.
+
+8. User Dashboard
+
+Connect sites (WordPress/Shopify), manage keywords, view content queue, approve/generated posts, schedule posts, and track backlink prospects.
+
+View usage limits and plan details.
+
+Upgrade/downgrade plan via payment integration.
+
+9. Analytics & SEO Tracking
+
+Track keyword rankings, post performance, traffic metrics via Google Analytics / Search Console.
+
+Feed data back into keyword prioritization for smarter content suggestions.
+
+10. Technology Stack
+
+Frontend: React or Vue (responsive, dashboard UI).
+
+Backend: Python (FastAPI) or Node.js (Express).
+
+Database: PostgreSQL or MySQL for users, sites, keywords, posts, subscriptions.
+
+Queue: Celery / RQ / Bull for heavy tasks (content generation, image generation).
+
+Storage: S3-compatible (images/media).
+
+APIs: WordPress REST API, Shopify Admin API, Keyword APIs, OpenAI GPT (text), OpenAI DALL·E/Stability (images), optional Copyscape/plagiarism.
+
+Payment: Stripe / PayPal for subscriptions.
+
+11. Automation Rules & Safety
+
+Daily post limits based on plan (1–3/day free, configurable for paid).
+
+Human-in-the-loop approval optional but recommended for content quality.
+
+Only auto-link internally; no automated external links.
+
+Backlink helper is semi-automated to avoid spam penalties.
+
+SEO checks mandatory before auto-publish.
+
+12. Future-Proof Enhancements
+
+Auto-refresh old posts for SEO updates.
+
+Internal link prediction AI.
+
+Post performance prediction using historical traffic.
+
+A/B testing for titles/meta descriptions.
+
+Multi-language content support.
+
+Multi-site and multi-platform management.
+
+13. Deliverables
+
+Full backend + frontend code implementing all above features.
+
+Subscription management and payment integration.
+
+Admin dashboard for global control.
+
+Tiered feature access per plan (free & paid).
+
+API integrations for WordPress, Shopify, OpenAI (text+images), keyword APIs, plagiarism check.
+
+Queue and storage management code.
+
+Documentation for deployment, usage, scaling, and SaaS operation.
+
+Goal: Create a never-before-built, scalable, safe, automated SEO SaaS platform for WordPress & Shopify with subscription plans, admin oversight, AI-powered content + image generation, keyword research, semi-automated backlink assistance, SEO quality checks, and future-proof modular design.
+
+This version is the ultimate combination:
+
+Subscription tiers: free & paid with feature gating.
+
+Single global admin dashboard to manage everything.
+
+Safe, automated content + image generation.
+
+Keyword management and SEO workflow.
+
+White-hat backlink helper (semi-automated).
+
+Fully modular and future-proof, ready for multi-site SaaS.
