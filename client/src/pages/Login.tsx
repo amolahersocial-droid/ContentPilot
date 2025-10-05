@@ -1,14 +1,16 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMode } from "@/contexts/ModeContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Crown } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
+import { Crown, Loader2 } from "lucide-react";
+import { SiGoogle, SiShopify } from "react-icons/si";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { isShopifyMode } = useMode();
 
   useEffect(() => {
     if (user) {
@@ -16,9 +18,34 @@ export default function Login() {
     }
   }, [user, setLocation]);
 
+  // If in Shopify mode, redirect to Shopify OAuth
+  useEffect(() => {
+    if (isShopifyMode) {
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get('shop');
+      if (shop) {
+        window.location.href = `/api/shopify/auth?shop=${shop}`;
+      }
+    }
+  }, [isShopifyMode]);
+
   const handleGoogleLogin = () => {
     window.location.href = "/api/login";
   };
+
+  // Show loading state while redirecting to Shopify
+  if (isShopifyMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Redirecting to Shopify authentication...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
