@@ -40,18 +40,21 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: process.env.NODE_ENV === "production" ? {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://cdn.shopify.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Shopify App Bridge needs inline styles
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://api.openai.com"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://*.myshopify.com"],
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'"],
+      frameAncestors: ["https://*.myshopify.com", "https://admin.shopify.com"], // Allow Shopify to embed us
     },
   } : false, // Disable CSP in dev for Vite HMR
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
+  // Don't set X-Frame-Options when we have frame-ancestors in CSP
+  frameguard: false,
 });
 
 // Input sanitization middleware
