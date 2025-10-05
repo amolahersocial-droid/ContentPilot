@@ -8,6 +8,15 @@ import { generateSEOContent, generateImage, generateMultipleImages } from "./ser
 import { validateSEO } from "./services/seo-validator";
 import { WordPressService } from "./services/wordpress";
 import { ShopifyService } from "./services/shopify";
+import {
+  authRateLimiter,
+  contentGenerationRateLimiter,
+  validate,
+  registerValidation,
+  loginValidation,
+  siteValidation,
+  keywordValidation,
+} from "./middleware/security";
 
 // TODO: Implement Razorpay payment integration
 // - Add POST /api/subscriptions/checkout endpoint to create Razorpay order
@@ -16,7 +25,7 @@ import { ShopifyService } from "./services/shopify";
 // - Add subscription renewal and cancellation endpoints
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.post("/api/auth/register", async (req, res, next) => {
+  app.post("/api/auth/register", authRateLimiter, validate(registerValidation), async (req, res, next) => {
     try {
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
@@ -62,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/auth/login", authRateLimiter, validate(loginValidation), (req, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return next(err);
       if (!user) {
@@ -130,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sites", requireAuth, async (req, res) => {
+  app.post("/api/sites", requireAuth, validate(siteValidation), async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const result = insertSiteSchema.safeParse({ ...req.body, userId: req.user.id });
@@ -228,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/keywords", requireAuth, async (req, res) => {
+  app.post("/api/keywords", requireAuth, validate(keywordValidation), async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const result = insertKeywordSchema.safeParse({ ...req.body, userId: req.user.id });
@@ -288,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/posts/generate", requireAuth, async (req, res) => {
+  app.post("/api/posts/generate", requireAuth, contentGenerationRateLimiter, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const { keywordId, siteId, wordCount, generateImages } = req.body;

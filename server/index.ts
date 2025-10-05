@@ -2,12 +2,20 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
+import { helmetConfig, sanitizeInput, apiRateLimiter } from "./middleware/security";
 
 const app = express();
+
+// Security middleware
+app.use(helmetConfig);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(sanitizeInput);
 
 setupAuth(app);
+
+// Global API rate limiting
+app.use("/api", apiRateLimiter);
 
 app.use((req, res, next) => {
   const start = Date.now();
