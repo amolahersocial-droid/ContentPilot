@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMode } from "@/contexts/ModeContext";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Crown, LogOut, Shield, Zap, Loader2, Key, CheckCircle2, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ShopifyBilling } from "@/components/ShopifyBilling";
 
 export default function Settings() {
   const { user, logout } = useAuth();
+  const { isShopifyMode } = useMode();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -367,7 +370,22 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {user?.subscriptionPlan === "free" && (
+      {isShopifyMode ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary" />
+              Subscription Management
+            </CardTitle>
+            <CardDescription>
+              Manage your RankForge subscription through Shopify
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ShopifyBilling />
+          </CardContent>
+        </Card>
+      ) : user?.subscriptionPlan === "free" ? (
         <Card className="border-primary/50 bg-primary/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -414,7 +432,7 @@ export default function Settings() {
             </Button>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <Card>
         <CardHeader>

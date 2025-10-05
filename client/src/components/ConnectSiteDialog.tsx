@@ -192,7 +192,7 @@ export function ConnectSiteDialog({ open, onOpenChange }: ConnectSiteDialogProps
                 </p>
               </div>
             </TabsContent>
-            </Tabs>
+          </Tabs>
           )}
           
           {isShopifyMode && (
