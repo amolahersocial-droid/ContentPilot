@@ -5,6 +5,7 @@ declare global {
   interface Window {
     shopify?: any;
     AppBridge?: any;
+    shopifyApiKey?: string;
   }
 }
 
@@ -77,7 +78,9 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
 
         console.log("[SHOPIFY PROVIDER] ✅ Host confirmed");
 
-        // Add meta tag for Shopify API key (required for App Bridge 4.x)
+        // Store API key globally and add meta tag for App Bridge 4.x
+        window.shopifyApiKey = data.apiKey;
+        
         const existingMeta = document.querySelector('meta[name="shopify-api-key"]');
         if (!existingMeta && data.apiKey) {
           console.log("[SHOPIFY PROVIDER] Adding shopify-api-key meta tag");
@@ -109,6 +112,35 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
               console.log('[SHOPIFY PROVIDER] ✅ App Bridge initialized from CDN');
               // App Bridge 4.x is automatically initialized via meta tags
               // No need to call createApp - the CDN handles it
+              
+              // Set up NavMenu for left panel navigation
+              try {
+                if (window.shopify?.navigation) {
+                  console.log('[SHOPIFY PROVIDER] Setting up NavMenu');
+                  window.shopify.navigation.set([
+                    {
+                      label: 'Dashboard',
+                      destination: '/dashboard',
+                    },
+                    {
+                      label: 'Sites',
+                      destination: '/sites',
+                    },
+                    {
+                      label: 'Keywords',
+                      destination: '/keywords',
+                    },
+                    {
+                      label: 'Content',
+                      destination: '/posts',
+                    },
+                  ]);
+                  console.log('[SHOPIFY PROVIDER] ✅ NavMenu configured');
+                }
+              } catch (navError) {
+                console.warn('[SHOPIFY PROVIDER] NavMenu setup failed:', navError);
+              }
+              
               setAppBridgeReady(true);
             } else {
               console.log("[SHOPIFY PROVIDER] App Bridge not ready yet - retrying in 1s");
@@ -116,6 +148,34 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
               setTimeout(() => {
                 if ((window as any).shopify) {
                   console.log('[SHOPIFY PROVIDER] ✅ App Bridge initialized (delayed)');
+                  
+                  // Set up NavMenu on delayed init
+                  try {
+                    if (window.shopify?.navigation) {
+                      window.shopify.navigation.set([
+                        {
+                          label: 'Dashboard',
+                          destination: '/dashboard',
+                        },
+                        {
+                          label: 'Sites',
+                          destination: '/sites',
+                        },
+                        {
+                          label: 'Keywords',
+                          destination: '/keywords',
+                        },
+                        {
+                          label: 'Content',
+                          destination: '/posts',
+                        },
+                      ]);
+                      console.log('[SHOPIFY PROVIDER] ✅ NavMenu configured (delayed)');
+                    }
+                  } catch (navError) {
+                    console.warn('[SHOPIFY PROVIDER] NavMenu setup failed:', navError);
+                  }
+                  
                   setAppBridgeReady(true);
                 } else {
                   console.warn('[SHOPIFY PROVIDER] ⚠️ App Bridge failed to initialize after timeout');
@@ -157,31 +217,23 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
     initializeShopifyAppBridge();
   }, [isShopifyMode]);
 
-  // Redirect to Shopify OAuth using App Bridge (for embedded apps)
+  // Redirect to Shopify OAuth using backend endpoint (handles OAuth URL generation)
   const redirectToAuth = (shop: string) => {
     console.log("[SHOPIFY PROVIDER] redirectToAuth called", { shop, appBridgeReady });
     
-    const authUrl = `/api/auth/shopify?shop=${shop}`;
+    // Use backend endpoint which properly generates OAuth URL
+    const backendAuthUrl = `/api/auth/shopify?shop=${shop}`;
     
-    // If App Bridge is ready, use it for top-level redirect
-    if (window.shopify && appBridgeReady) {
-      console.log("[SHOPIFY PROVIDER] Using App Bridge Redirect for OAuth");
-      try {
-        // Use App Bridge to redirect - this performs a top-level navigation
-        window.shopify.window.redirect(authUrl);
-      } catch (error) {
-        console.error("[SHOPIFY PROVIDER] App Bridge redirect failed:", error);
-        // Fallback to regular redirect
-        window.top!.location.href = authUrl;
-      }
+    console.log("[SHOPIFY PROVIDER] Redirecting to backend OAuth endpoint:", backendAuthUrl);
+    
+    // Always use top-level redirect for OAuth to break out of iframe
+    // This is necessary because Shopify's OAuth page cannot be loaded in an iframe
+    if (window.top) {
+      console.log("[SHOPIFY PROVIDER] Using top-level redirect");
+      window.top.location.href = backendAuthUrl;
     } else {
-      // Fallback: Try to redirect at top level (breaks out of iframe)
-      console.log("[SHOPIFY PROVIDER] App Bridge not ready - using top-level redirect");
-      if (window.top) {
-        window.top.location.href = authUrl;
-      } else {
-        window.location.href = authUrl;
-      }
+      console.log("[SHOPIFY PROVIDER] Using window redirect");
+      window.location.href = backendAuthUrl;
     }
   };
 
