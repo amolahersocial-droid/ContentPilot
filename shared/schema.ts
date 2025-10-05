@@ -81,15 +81,20 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Users table with subscription and Razorpay integration
+// Users table with subscription and Razorpay integration (supports both local and Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 })
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  // Replit Auth fields
   email: text("email").unique(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   profileImageUrl: varchar("profile_image_url", { length: 512 }),
+  // Legacy local auth fields (deprecated, will be removed)
+  username: text("username"),
+  password: text("password"),
+  // User settings
   role: userRoleEnum("role").notNull().default("user"),
   subscriptionPlan: subscriptionPlanEnum("subscription_plan")
     .notNull()
@@ -580,15 +585,24 @@ export const outreachEventsRelations = relations(outreachEvents, ({ one }) => ({
 
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users, {
-  email: z.string().email(),
-  username: z.string().min(3).max(50),
-  password: z.string().min(8),
+  email: z.string().email().optional(),
+  username: z.string().min(3).max(50).optional(),
+  password: z.string().min(8).optional(),
 }).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
   dailyPostsUsed: true,
   lastPostResetDate: true,
+});
+
+// Replit Auth upsert schema
+export const upsertUserSchema = z.object({
+  id: z.string(),
+  email: z.string().email().nullable().optional(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  profileImageUrl: z.string().nullable().optional(),
 });
 
 export const insertSiteSchema = createInsertSchema(sites, {
@@ -645,6 +659,7 @@ export const insertBacklinkSchema = createInsertSchema(backlinks, {
 
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export type InsertSite = z.infer<typeof insertSiteSchema>;

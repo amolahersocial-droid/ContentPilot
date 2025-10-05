@@ -2,14 +2,11 @@ import './env';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupAuth } from "./auth";
+import { setupAuth } from "./replitAuth";
 import { helmetConfig, sanitizeInput, apiRateLimiter } from "./middleware/security";
 import { startScheduler } from "./queue";
 
 const app = express();
-
-// Trust proxy - required for Replit deployment and rate limiting
-app.set('trust proxy', true);
 
 // Security middleware
 app.use(helmetConfig);
@@ -17,9 +14,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(sanitizeInput);
 
-setupAuth(app);
+// Setup Replit Auth (includes session and passport initialization)
+await setupAuth(app);
 
-// Global API rate limiting
+// API rate limiting
 app.use("/api", apiRateLimiter);
 
 // Start background job scheduler

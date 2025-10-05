@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import passport from "passport";
 import crypto from "crypto";
 import { storage } from "./storage";
-import { hashPassword, requireAuth, requireAdmin, requirePaidPlan } from "./auth";
+import { isAuthenticated as requireAuth, requireAdmin, requirePaidPlan, loadUser } from "./replitAuth";
 import { insertUserSchema, insertSiteSchema, insertKeywordSchema, insertPostSchema, insertBacklinkSchema } from "@shared/schema";
 import { generateSEOContent, generateImage, generateMultipleImages } from "./services/openai";
 import { validateSEO } from "./services/seo-validator";
@@ -32,6 +32,34 @@ import {
 const RAZORPAY_PLAN_ID = process.env.RAZORPAY_PLAN_ID || "";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Load user data from database for all authenticated requests
+  app.use(loadUser);
+
+  // New Replit Auth endpoint - returns user from database
+  app.get('/api/auth/user', requireAuth, async (req: any, res) => {
+    try {
+      const sessionUser = req.user;
+      const userId = sessionUser?.claims?.sub || sessionUser?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const dbUser = await storage.getUser(userId);
+      
+      if (!dbUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(dbUser);
+    } catch (error: any) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // LEGACY: Old local auth routes (commented out - using Replit Auth now)
+  /*
   app.post("/api/auth/register", authRateLimiter, validate(registerValidation), async (req, res, next) => {
     try {
       const result = insertUserSchema.safeParse(req.body);
@@ -108,6 +136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     delete userResponse.password;
     return res.json(userResponse);
   });
+  */
+  // END LEGACY AUTH ROUTES
 
   app.patch("/api/users/settings", requireAuth, async (req, res) => {
     try {

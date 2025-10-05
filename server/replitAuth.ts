@@ -152,3 +152,68 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+// Get user from database and attach to req
+export const loadUser: RequestHandler = async (req: any, res, next) => {
+  try {
+    const sessionUser = req.user as any;
+    if (!sessionUser || !sessionUser.claims) {
+      return next();
+    }
+    
+    const userId = sessionUser.claims.sub;
+    const dbUser = await storage.getUser(userId);
+    
+    if (dbUser) {
+      req.user = { ...sessionUser, ...dbUser };
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requireAdmin: RequestHandler = async (req: any, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const sessionUser = req.user as any;
+  const userId = sessionUser.claims?.sub;
+  
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const dbUser = await storage.getUser(userId);
+  
+  if (!dbUser || dbUser.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden - Admin access required" });
+  }
+  
+  req.user = { ...sessionUser, ...dbUser };
+  next();
+};
+
+export const requirePaidPlan: RequestHandler = async (req: any, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const sessionUser = req.user as any;
+  const userId = sessionUser.claims?.sub;
+  
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const dbUser = await storage.getUser(userId);
+  
+  if (!dbUser || dbUser.subscriptionPlan !== "paid") {
+    return res.status(403).json({ message: "Upgrade to paid plan required" });
+  }
+  
+  req.user = { ...sessionUser, ...dbUser };
+  next();
+};
