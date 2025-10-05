@@ -34,39 +34,55 @@ export const contentGenerationRateLimiter = rateLimit({
 
 // Helmet configuration for secure headers
 export const helmetConfig = helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: process.env.NODE_ENV === "production" ? {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Vite HMR in dev
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"], // Allow external images from DALL-E
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https://api.openai.com"],
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
     },
-  },
-  crossOriginEmbedderPolicy: false, // Allow external resources
+  } : false, // Disable CSP in dev for Vite HMR
+  crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
 });
 
 // Input sanitization middleware
 export function sanitizeInput(req: Request, res: Response, next: NextFunction) {
-  // Remove potential XSS vectors from all string inputs
-  const sanitize = (obj: any): any => {
-    if (typeof obj === "string") {
-      return obj
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-        .replace(/javascript:/gi, "")
-        .replace(/on\w+\s*=/gi, "");
-    }
-    if (typeof obj === "object" && obj !== null) {
-      for (const key in obj) {
-        obj[key] = sanitize(obj[key]);
+  const sanitize = (obj: any, depth = 0): any => {
+    // Prevent prototype pollution
+    if (depth > 10) return obj;
+    if (obj === null || typeof obj !== "object") {
+      if (typeof obj === "string") {
+        // Strip all HTML tags and dangerous patterns
+        return obj
+          .replace(/<[^>]*>/g, "") // Remove all HTML tags
+          .replace(/javascript:/gi, "")
+          .replace(/on\w+\s*=/gi, "")
+          .replace(/data:/gi, "")
+          .trim();
       }
+      return obj;
     }
-    return obj;
+
+    // Prevent prototype pollution attacks
+    if (obj.constructor !== Object && obj.constructor !== Array) {
+      return obj;
+    }
+
+    const sanitized: any = Array.isArray(obj) ? [] : {};
+    for (const key in obj) {
+      // Skip prototype properties
+      if (!obj.hasOwnProperty(key)) continue;
+      if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
+      
+      sanitized[key] = sanitize(obj[key], depth + 1);
+    }
+    return sanitized;
   };
 
   if (req.body) {
@@ -132,4 +148,15 @@ export const keywordValidation = [
     .trim()
     .isLength({ min: 1, max: 200 })
     .withMessage("Keyword required (max 200 chars)"),
+];
+
+export const backlinkValidation = [
+  body("prospectUrl").trim().isURL().withMessage("Valid prospect URL required"),
+  body("prospectName").optional().trim().isLength({ max: 200 }),
+  body("prospectEmail").optional().trim().isEmail().withMessage("Valid email required"),
+  body("status")
+    .optional()
+    .isIn(["prospect", "contacted", "responded", "confirmed", "rejected"])
+    .withMessage("Invalid status"),
+  body("notes").optional().trim().isLength({ max: 2000 }),
 ];

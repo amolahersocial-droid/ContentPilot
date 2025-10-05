@@ -8,14 +8,18 @@ import { generateSEOContent, generateImage, generateMultipleImages } from "./ser
 import { validateSEO } from "./services/seo-validator";
 import { WordPressService } from "./services/wordpress";
 import { ShopifyService } from "./services/shopify";
+import { SiteCrawler } from "./services/site-crawler";
+import { BacklinkHelper } from "./services/backlink-helper";
 import {
   authRateLimiter,
   contentGenerationRateLimiter,
+  apiRateLimiter,
   validate,
   registerValidation,
   loginValidation,
   siteValidation,
   keywordValidation,
+  backlinkValidation,
 } from "./middleware/security";
 
 // TODO: Implement Razorpay payment integration
@@ -224,6 +228,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ valid: isValid });
     } catch (error: any) {
       return res.status(500).json({ message: error.message, valid: false });
+    }
+  });
+
+  app.post("/api/sites/:id/crawl", requireAuth, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const site = await storage.getSiteById(req.params.id);
+      if (!site || site.userId !== req.user.id) {
+        return res.status(404).json({ message: "Site not found" });
+      }
+
+      const { depth = "quick" } = req.body;
+      
+      // Perform crawl
+      const crawlResult = depth === "deep" 
+        ? await SiteCrawler.deepCrawl(site.url)
+        : await SiteCrawler.quickCrawl(site.url);
+
+      // Convert Map to plain object for JSON serialization
+      const siteStructure: Record<string, string[]> = {};
+      crawlResult.siteStructure.forEach((value, key) => {
+        siteStructure[key] = value;
+      });
+
+      // Store crawl data in site (use 'crawledPages' key for consistency)
+      const crawlData = {
+        totalPages: crawlResult.totalPages,
+        crawledPages: crawlResult.crawledPages, // Changed from 'pages' to 'crawledPages'
+        robots: crawlResult.robots,
+        sitemaps: crawlResult.sitemaps,
+        siteStructure,
+        errors: crawlResult.errors,
+        completedAt: crawlResult.completedAt,
+      };
+
+      await storage.updateSite(site.id, {
+        crawlData,
+        lastCrawledAt: new Date(),
+      });
+
+      return res.json(crawlData);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
     }
   });
 
@@ -491,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/backlinks", requireAuth, requirePaidPlan, async (req, res) => {
+  app.post("/api/backlinks", requireAuth, requirePaidPlan, validate(backlinkValidation), async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const result = insertBacklinkSchema.safeParse({ ...req.body, userId: req.user.id });
@@ -501,6 +548,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const backlink = await storage.createBacklink(result.data);
       return res.status(201).json(backlink);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/backlinks/:id", requireAuth, requirePaidPlan, validate(backlinkValidation), async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const backlink = await storage.getBacklinkById(req.params.id);
+      if (!backlink || backlink.userId !== req.user.id) {
+        return res.status(404).json({ message: "Backlink not found" });
+      }
+
+      // Update timestamps based on status changes (only if status actually changed)
+      const updates: any = { ...req.body };
+      if (req.body.status && req.body.status !== backlink.status) {
+        if (req.body.status === "contacted") {
+          updates.contactedAt = new Date();
+        } else if (req.body.status === "responded") {
+          updates.respondedAt = new Date();
+        } else if (req.body.status === "confirmed") {
+          updates.confirmedAt = new Date();
+        }
+      }
+
+      const updated = await storage.updateBacklink(req.params.id, updates);
+      return res.json(updated);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/backlinks/:id", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const backlink = await storage.getBacklinkById(req.params.id);
+      if (!backlink || backlink.userId !== req.user.id) {
+        return res.status(404).json({ message: "Backlink not found" });
+      }
+
+      await storage.deleteBacklink(req.params.id);
+      return res.json({ message: "Backlink deleted" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/backlinks/:id/generate-template", requireAuth, requirePaidPlan, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const backlink = await storage.getBacklinkById(req.params.id);
+      if (!backlink || backlink.userId !== req.user.id) {
+        return res.status(404).json({ message: "Backlink not found" });
+      }
+
+      const { yourSiteName, yourArticleUrl, yourArticleTitle, niche } = req.body;
+      
+      const template = BacklinkHelper.generateEmailTemplate({
+        prospectName: backlink.prospectName || undefined,
+        prospectUrl: backlink.prospectUrl,
+        yourSiteName,
+        yourArticleUrl,
+        yourArticleTitle,
+        niche,
+      });
+
+      // Save template to backlink
+      await storage.updateBacklink(req.params.id, {
+        outreachTemplate: JSON.stringify(template),
+      });
+
+      return res.json(template);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/backlinks/identify-prospects", requireAuth, requirePaidPlan, apiRateLimiter, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { siteId, niche } = req.body;
+
+      if (!siteId || !niche) {
+        return res.status(400).json({ message: "siteId and niche are required" });
+      }
+
+      const site = await storage.getSiteById(siteId);
+      if (!site || site.userId !== req.user.id) {
+        return res.status(404).json({ message: "Site not found" });
+      }
+
+      let prospects = [];
+      
+      // Try to identify from crawl data first
+      if (site.crawlData) {
+        prospects = BacklinkHelper.identifyProspectsFromCrawl(site.crawlData, niche);
+      }
+
+      // If no prospects from crawl, generate suggestions
+      if (prospects.length === 0) {
+        prospects = await BacklinkHelper.generateProspects({
+          niche,
+          keywords: [],
+          count: 10,
+        });
+      }
+
+      return res.json(prospects);
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
