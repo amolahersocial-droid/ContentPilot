@@ -18,11 +18,12 @@ This platform is a fully automated, production-ready SaaS solution for generatin
 The platform follows a client-server architecture. The frontend is built with **React, TypeScript, Wouter, TanStack Query, Shadcn UI, and Tailwind CSS**, supporting dark mode and ensuring a high-quality user experience. The backend is an **Express.js** server, utilizing **PostgreSQL (Neon)** with **Drizzle ORM** for type-safe database interactions.
 
 **Core Technical Implementations:**
-- **Content Generation**: AI-powered article generation using OpenAI GPT-5 and contextual image creation with DALL·E 3.
+- **Content Generation**: AI-powered article generation using OpenAI GPT-4o and contextual image creation with DALL·E 3. Includes intelligent internal linking that references other published blog posts to improve SEO and site structure.
 - **SEO Optimization**: Integrated validator performs Flesch-Kincaid readability scoring, meta tag validation, heading structure analysis, keyword density calculation, alt tag coverage, and duplicate content detection.
 - **Site Integration**: Direct publishing to WordPress (via REST API with Application Passwords) and Shopify (via Admin API with Theme App Extensions).
 - **Advanced Site Crawler**: Configurable depth, `robots.txt` parsing, metadata extraction, link mapping, and polite crawling.
-- **Background Processing**: **Bull job queue with Redis** manages asynchronous tasks across three queue types: Content Generation, Publishing, and Scheduled Posts, featuring real-time progress tracking and error handling with retries.
+- **Background Processing**: **Database-backed job queue** with in-process worker manages asynchronous tasks across three job types: Content Generation, Publishing, and Scheduled Posts, featuring real-time status tracking, error handling with retries, and no external infrastructure dependencies.
+- **Internal Linking**: Automatically identifies relevant published posts and includes 2-3 contextual internal links in generated content to improve SEO and user engagement.
 - **Security**: Comprehensive measures include rate limiting, Helmet CSP, input sanitization, XSS protection, `express-validator` for request validation, and Drizzle ORM for SQL injection prevention.
 - **Subscription Management**: Integrates with Razorpay for secure payment processing and subscription lifecycle management, featuring feature gating based on user plans.
 - **Scheduled Publishing**: Hourly scheduler for automated daily post generation and publishing at customizable times, selecting random keywords from a site's configured list.
@@ -34,9 +35,8 @@ The platform follows a client-server architecture. The frontend is built with **
 
 ## External Dependencies
 
-- **OpenAI API**: For GPT-5 (content generation) and DALL·E 3 (image generation).
+- **OpenAI API**: For GPT-4o (content generation) and DALL·E 3 (image generation).
 - **WordPress REST API**: For integration and content publishing to WordPress sites.
 - **Shopify Admin API**: For integration and content publishing to Shopify sites.
 - **Razorpay**: For secure payment gateway services, subscription management, and webhooks.
-- **PostgreSQL (Neon)**: Cloud-hosted relational database.
-- **Redis**: In-memory data store, primarily used by Bull for the job queue.
+- **PostgreSQL (Neon)**: Cloud-hosted relational database with job queue persistence.
