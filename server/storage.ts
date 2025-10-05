@@ -65,6 +65,7 @@ export interface IStorage {
   createJob(job: Partial<Job>): Promise<Job>;
   updateJob(id: string, updates: Partial<Job>): Promise<Job>;
   getJobById(id: string): Promise<Job | undefined>;
+  getPendingJobs(limit?: number): Promise<Job[]>;
   
   createAuditLog(log: Partial<AuditLog>): Promise<AuditLog>;
 }
@@ -283,6 +284,15 @@ export class DatabaseStorage implements IStorage {
   async getJobById(id: string): Promise<Job | undefined> {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, id));
     return job || undefined;
+  }
+
+  async getPendingJobs(limit: number = 10): Promise<Job[]> {
+    return db
+      .select()
+      .from(jobs)
+      .where(eq(jobs.status, "pending"))
+      .orderBy(jobs.createdAt)
+      .limit(limit);
   }
 
   async createAuditLog(logData: Partial<AuditLog>): Promise<AuditLog> {

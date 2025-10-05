@@ -12,7 +12,7 @@ import { ShopifyService } from "./services/shopify";
 import { SiteCrawler } from "./services/site-crawler";
 import { BacklinkHelper } from "./services/backlink-helper";
 import { getRazorpayInstance } from "./services/razorpay";
-import { contentGenerationQueue, publishingQueue } from "./queue";
+// Queue imports removed - using database-backed jobs now
 import { smtpService } from "./services/smtp";
 import { outreachTemplateService } from "./services/outreach-templates";
 import { websiteDiscoveryService } from "./services/website-discovery";
@@ -498,9 +498,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "draft",
       });
 
-      // Try to queue content generation job, fallback to synchronous if Redis unavailable
-      try {
-        const job = await contentGenerationQueue.add({
+      // Queue content generation job in database
+      const job = await storage.createJob({
+        userId: req.user.id,
+        type: "content-generation",
+        payload: {
           postId: post.id,
           userId: req.user.id,
           siteId,
@@ -508,98 +510,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wordCount: wordCount || 1500,
           generateImages: generateImages && req.user.subscriptionPlan === "paid",
           publishImmediately: publishImmediately || false,
-        });
+        },
+        status: "pending",
+      });
 
-        // Update daily posts counter
-        await storage.updateUser(req.user.id, {
-          dailyPostsUsed: req.user.dailyPostsUsed + 1,
-          lastPostResetDate: now,
-        });
+      // Update daily posts counter
+      await storage.updateUser(req.user.id, {
+        dailyPostsUsed: req.user.dailyPostsUsed + 1,
+        lastPostResetDate: now,
+      });
 
-        return res.status(202).json({ 
-          post, 
-          jobId: job.id,
-          message: "Content generation started. Check job status for progress." 
-        });
-      } catch (queueError: any) {
-        // Redis unavailable - process synchronously
-        console.warn("Redis unavailable, processing synchronously:", queueError.message);
-        
-        // Get keyword if specified
-        let keyword = null;
-        if (keywordId) {
-          keyword = await storage.getKeywordById(keywordId);
-        }
-
-        // Generate content
-        const content = await generateSEOContent(
-          keyword?.keyword || "general topic",
-          wordCount || 1500,
-          req.user.openaiApiKey,
-          req.user.useOwnOpenAiKey || false
-        );
-
-        // Generate images if requested
-        let images: Array<{ url: string; altText: string }> = [];
-        if (generateImages && (req.user.subscriptionPlan === "paid" || req.user.useOwnOpenAiKey)) {
-          const imagePrompts = [`Featured image for ${keyword?.keyword || "article"}`];
-          images = await generateMultipleImages(
-            imagePrompts,
-            req.user.openaiApiKey,
-            req.user.useOwnOpenAiKey || false
-          );
-        }
-
-        // Validate SEO
-        const seoResults = validateSEO(
-          content.title,
-          content.metaTitle,
-          content.metaDescription,
-          content.content,
-          content.headings,
-          images,
-          keyword?.keyword || ""
-        );
-
-        // Update post with generated content
-        const updated = await storage.updatePost(post.id, {
-          title: content.title,
-          content: content.content,
-          metaTitle: content.metaTitle,
-          metaDescription: content.metaDescription,
-          headings: content.headings,
-          images,
-          status: "draft",
-        });
-
-        // Create SEO score record
-        await storage.createSeoScore({
-          postId: post.id,
-          readabilityScore: seoResults.readabilityScore,
-          readabilityGrade: seoResults.readabilityGrade,
-          metaTitleLength: seoResults.metaTitleLength,
-          metaDescriptionLength: seoResults.metaDescriptionLength,
-          headingStructureValid: seoResults.headingStructureValid,
-          keywordDensity: seoResults.keywordDensity.toString(),
-          altTagsCoverage: seoResults.altTagsCoverage,
-          duplicateContentScore: seoResults.duplicateContentScore,
-          mobileResponsive: seoResults.mobileResponsive,
-          lighthouseScore: seoResults.lighthouseScore,
-          overallSeoScore: seoResults.overallSeoScore,
-          validationErrors: seoResults.validationErrors,
-        });
-
-        // Update daily posts counter
-        await storage.updateUser(req.user.id, {
-          dailyPostsUsed: req.user.dailyPostsUsed + 1,
-          lastPostResetDate: now,
-        });
-
-        return res.json({ 
-          post: updated, 
-          message: "Content generated successfully (processed synchronously)" 
-        });
-      }
+      return res.status(202).json({ 
+        post, 
+        jobId: job.id,
+        message: "Content generation started. Check job status for progress." 
+      });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -643,80 +568,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
 
-      // Try to queue publishing job, fallback to synchronous if Redis unavailable
-      try {
-        const job = await publishingQueue.add({
+      // Queue publishing job in database
+      const job = await storage.createJob({
+        userId: req.user.id,
+        type: "publishing",
+        payload: {
           postId: post.id,
           userId: req.user.id,
           siteId: post.siteId,
-        });
+        },
+        status: "pending",
+      });
 
-        // Update post status to scheduled
-        await storage.updatePost(req.params.id, {
-          status: "scheduled",
-          scheduledFor: new Date(),
-        });
+      // Update post status to scheduled
+      await storage.updatePost(req.params.id, {
+        status: "scheduled",
+        scheduledFor: new Date(),
+      });
 
-        return res.json({ 
-          message: "Publishing queued",
-          jobId: job.id,
-          post
-        });
-      } catch (queueError: any) {
-        // Redis unavailable - publish synchronously
-        console.warn("Redis unavailable, publishing synchronously:", queueError.message);
-        
-        const site = await storage.getSiteById(post.siteId);
-        if (!site) {
-          return res.status(404).json({ message: "Site not found" });
-        }
-
-        let externalPostId = "";
-        const creds = site.credentials as any;
-
-        if (site.type === "wordpress") {
-          const wp = new WordPressService(site.url, {
-            username: creds.username,
-            appPassword: creds.appPassword,
-          });
-
-          const publishedPost = await wp.createPost({
-            title: post.title,
-            content: post.content,
-            status: "publish",
-            meta: {
-              description: post.metaDescription || undefined,
-            },
-          });
-
-          externalPostId = publishedPost.id.toString();
-        } else if (site.type === "shopify") {
-          const shopify = new ShopifyService(site.url, {
-            apiKey: creds.apiKey,
-            accessToken: creds.accessToken,
-          });
-
-          const publishedPost = await shopify.createArticle({
-            title: post.title,
-            body_html: post.content,
-            published: true,
-          });
-
-          externalPostId = publishedPost.id.toString();
-        }
-
-        // Update post status
-        const updated = await storage.updatePost(post.id, {
-          status: "published",
-          publishedAt: new Date(),
-          externalPostId,
-        });
-
-        return res.json({ 
-          message: "Published successfully (processed synchronously)",
-          post: updated
-        });
-      }
+      return res.json({ 
+        message: "Publishing queued",
+        jobId: job.id,
+        post
+      });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -873,24 +747,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job status endpoints
   app.get("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
-      const job = await contentGenerationQueue.getJob(req.params.id) || 
-                  await publishingQueue.getJob(req.params.id);
+      const job = await storage.getJobById(req.params.id);
       
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
 
-      const state = await job.getState();
-      const progress = job.progress();
-      const result = job.returnvalue;
-      const error = job.failedReason;
-
       return res.json({
         id: job.id,
-        state,
-        progress,
-        result,
-        error,
+        status: job.status,
+        result: job.result,
+        error: job.error,
+        createdAt: job.createdAt,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
       });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });

@@ -28,7 +28,8 @@ export async function generateSEOContent(
   keyword: string,
   targetLength: number = 2000,
   userApiKey?: string | null,
-  useOwnKey: boolean = false
+  useOwnKey: boolean = false,
+  internalLinkPrompt: string = ""
 ): Promise<GeneratedPost> {
   const openai = getOpenAIInstance(userApiKey, useOwnKey);
   const prompt = `Create an SEO-optimized blog post for the keyword "${keyword}". 
@@ -41,7 +42,7 @@ export async function generateSEOContent(
   - Naturally incorporate LSI keywords related to "${keyword}"
   - Include internal linking opportunities
   - Make content engaging, informative, and valuable
-  - Use proper semantic heading hierarchy
+  - Use proper semantic heading hierarchy${internalLinkPrompt}
   
   Respond with JSON in this format:
   {

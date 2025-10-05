@@ -4,7 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./replitAuth";
 import { helmetConfig, sanitizeInput, apiRateLimiter } from "./middleware/security";
-import { startScheduler } from "./queue";
+import { startWorker, startScheduler } from "./worker";
 
 const app = express();
 
@@ -20,7 +20,8 @@ await setupAuth(app);
 // API rate limiting
 app.use("/api", apiRateLimiter);
 
-// Start background job scheduler
+// Start background job worker and scheduler
+startWorker();
 startScheduler();
 
 app.use((req, res, next) => {
