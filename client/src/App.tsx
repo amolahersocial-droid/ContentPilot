@@ -22,6 +22,7 @@ import Backlinks from "@/pages/Backlinks";
 import Outreach from "@/pages/Outreach";
 import Settings from "@/pages/Settings";
 import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import Support from "@/pages/Support";
 import AdminUsers from "@/pages/admin/Users";
 import AdminSubscriptions from "@/pages/admin/Subscriptions";
@@ -160,6 +161,9 @@ function Router() {
       </Route>
       <Route path="/privacy">
         <Privacy />
+      </Route>
+      <Route path="/terms">
+        <Terms />
       </Route>
       <Route path="/support">
         <Support />
