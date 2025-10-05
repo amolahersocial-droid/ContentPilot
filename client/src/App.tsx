@@ -85,31 +85,67 @@ function Router() {
         {() => user ? <Redirect to="/dashboard" /> : <Register />}
       </Route>
       <Route path="/dashboard">
-        {() => <ProtectedRoute component={Dashboard} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Dashboard} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/dashboard/sites">
-        {() => <ProtectedRoute component={Sites} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Sites} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/dashboard/keywords">
-        {() => <ProtectedRoute component={Keywords} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Keywords} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/dashboard/content">
-        {() => <ProtectedRoute component={ContentQueue} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={ContentQueue} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/dashboard/backlinks">
-        {() => <ProtectedRoute component={Backlinks} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Backlinks} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/dashboard/settings">
-        {() => <ProtectedRoute component={Settings} />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={Settings} />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/admin/users">
-        {() => <ProtectedRoute component={AdminUsers} adminOnly />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={AdminUsers} adminOnly />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/admin/subscriptions">
-        {() => <ProtectedRoute component={AdminSubscriptions} adminOnly />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={AdminSubscriptions} adminOnly />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/admin/analytics">
-        {() => <ProtectedRoute component={AdminAnalytics} adminOnly />}
+        {() => (
+          <AppLayout>
+            <ProtectedRoute component={AdminAnalytics} adminOnly />
+          </AppLayout>
+        )}
       </Route>
       <Route path="/">
         {() => <Redirect to="/dashboard" />}
@@ -125,9 +161,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <TooltipProvider>
-            <AppLayout>
-              <Router />
-            </AppLayout>
+            <Router />
             <Toaster />
           </TooltipProvider>
         </AuthProvider>
