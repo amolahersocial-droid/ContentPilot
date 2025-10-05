@@ -301,10 +301,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       
+      // Get DB user
+      const dbUser = await storage.getUser(req.user.id);
+      if (!dbUser) return res.status(404).json({ message: "User not found" });
+      
       const { openaiApiKey, useOwnOpenAiKey } = req.body;
       
       // For free users, enforce that they must use their own API key
-      if (req.user.subscriptionPlan === "free" && !openaiApiKey && !req.user.openaiApiKey) {
+      if (dbUser.subscriptionPlan === "free" && !openaiApiKey && !dbUser.openaiApiKey) {
         return res.status(400).json({ 
           message: "Free plan users must provide an OpenAI API key" 
         });
@@ -312,8 +316,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update user settings
       await storage.updateUser(req.user.id, {
-        openaiApiKey: openaiApiKey || req.user.openaiApiKey,
-        useOwnOpenAiKey: req.user.subscriptionPlan === "free" ? true : useOwnOpenAiKey,
+        openaiApiKey: openaiApiKey || dbUser.openaiApiKey,
+        useOwnOpenAiKey: dbUser.subscriptionPlan === "free" ? true : useOwnOpenAiKey,
       });
       
       return res.json({ message: "Settings updated successfully" });
@@ -615,19 +619,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/posts/generate", requireAuth, contentGenerationRateLimiter, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      // Get DB user for plan and settings
+      const dbUser = await storage.getUser(req.user.id);
+      if (!dbUser) return res.status(404).json({ message: "User not found" });
+      
       const { keywordId, siteId, wordCount, generateImages, publishImmediately } = req.body;
 
       // Check daily limits for free plan
       const now = new Date();
-      if (req.user.subscriptionPlan === "free") {
+      if (dbUser.subscriptionPlan === "free") {
         // Free users must have their own OpenAI API key
-        if (!req.user.openaiApiKey) {
+        if (!dbUser.openaiApiKey) {
           return res.status(403).json({ 
             message: "Free plan users must provide their own OpenAI API key in Settings before generating content." 
           });
         }
         
-        if (req.user.dailyPostsUsed >= 3) {
+        if (dbUser.dailyPostsUsed >= 3) {
           return res.status(403).json({ message: "Free plan limited to 3 posts per day. Upgrade for unlimited." });
         }
       }
@@ -674,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update daily posts counter
       await storage.updateUser(req.user.id, {
-        dailyPostsUsed: req.user.dailyPostsUsed + 1,
+        dailyPostsUsed: dbUser.dailyPostsUsed + 1,
         lastPostResetDate: now,
       });
 
