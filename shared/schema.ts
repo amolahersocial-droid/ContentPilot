@@ -70,14 +70,26 @@ export const outreachEmailStatusEnum = pgEnum("outreach_email_status", [
   "failed",
 ]);
 
+// Sessions table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)]
+);
+
 // Users table with subscription and Razorpay integration
 export const users = pgTable("users", {
-  id: varchar("id", { length: 36 })
+  id: varchar("id", { length: 255 })
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").unique(),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  profileImageUrl: varchar("profile_image_url", { length: 512 }),
   role: userRoleEnum("role").notNull().default("user"),
   subscriptionPlan: subscriptionPlanEnum("subscription_plan")
     .notNull()
