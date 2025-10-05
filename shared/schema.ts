@@ -70,31 +70,71 @@ export const outreachEmailStatusEnum = pgEnum("outreach_email_status", [
   "failed",
 ]);
 
-// Sessions table for Replit Auth
+// Sessions table for Shopify session storage
 export const sessions = pgTable(
   "sessions",
   {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
+    id: varchar("id", { length: 255 }).primaryKey(),
+    shop: text("shop").notNull(),
+    state: text("state").notNull(),
+    isOnline: boolean("is_online").notNull().default(false),
+    scope: text("scope"),
+    expires: timestamp("expires"),
+    accessToken: text("access_token"),
+    userId: varchar("user_id", { length: 255 }),
+    onlineAccessInfo: jsonb("online_access_info"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)]
+  (table) => [
+    index("sessions_shop_idx").on(table.shop),
+    index("sessions_expires_idx").on(table.expires)
+  ]
 );
 
-// Users table with subscription and Razorpay integration (supports both local and Replit Auth)
+// Shopify shops (stores) using RankForge
+export const shops = pgTable("shops", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  // Shopify shop data
+  shop: text("shop").notNull().unique(), // mystore.myshopify.com
+  shopName: text("shop_name"),
+  shopOwner: text("shop_owner"),
+  email: text("email"),
+  accessToken: text("access_token").notNull(),
+  scope: text("scope"),
+  // Subscription
+  subscriptionPlan: subscriptionPlanEnum("subscription_plan")
+    .notNull()
+    .default("free"),
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  // Settings
+  openaiApiKey: text("openai_api_key"),
+  useOwnOpenAiKey: boolean("use_own_openai_key").notNull().default(false),
+  dailyPostsUsed: integer("daily_posts_used").notNull().default(0),
+  lastPostResetDate: timestamp("last_post_reset_date").default(
+    sql`CURRENT_TIMESTAMP`
+  ),
+  // Installation
+  installedAt: timestamp("installed_at").default(sql`CURRENT_TIMESTAMP`),
+  uninstalledAt: timestamp("uninstalled_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Keep users table for backward compatibility (will be migrated to shops)
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 })
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  // Replit Auth fields
   email: text("email").unique(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   profileImageUrl: varchar("profile_image_url", { length: 512 }),
-  // Legacy local auth fields (deprecated, will be removed)
   username: text("username"),
   password: text("password"),
-  // User settings
   role: userRoleEnum("role").notNull().default("user"),
   subscriptionPlan: subscriptionPlanEnum("subscription_plan")
     .notNull()
