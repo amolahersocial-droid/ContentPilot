@@ -43,10 +43,21 @@ export function verifyHmac(query: any): boolean {
     .update(message)
     .digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(generatedHash),
-    Buffer.from(hmac as string)
-  );
+  // Safely compare - handle mismatched lengths
+  try {
+    const generatedBuffer = Buffer.from(generatedHash);
+    const hmacBuffer = Buffer.from(hmac as string);
+    
+    // timingSafeEqual requires same length buffers
+    if (generatedBuffer.length !== hmacBuffer.length) {
+      return false;
+    }
+    
+    return crypto.timingSafeEqual(generatedBuffer, hmacBuffer);
+  } catch (error) {
+    // Handle any buffer creation or comparison errors
+    return false;
+  }
 }
 
 // Generate installation URL
