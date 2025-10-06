@@ -44,24 +44,12 @@ export default function Login() {
     defaultValues: { username: "", email: "", password: "" },
   });
 
-  // Check for shop parameter immediately on component mount
+  // Don't redirect from Login page in Shopify mode - let AuthProvider handle it
+  // AuthProvider will wait for App Bridge to be ready before redirecting
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shop = params.get('shop');
-    const embedded = params.get('embedded');
-    
-    console.log("[LOGIN] Checking for shop parameter", { shop, embedded, isShopifyMode });
-    
-    // If shop parameter or embedded parameter exists, redirect to Shopify OAuth
-    if (shop || (embedded === '1' && window.self !== window.top)) {
-      const shopParam = shop || sessionStorage.getItem('shop') || sessionStorage.getItem('shopify_shop');
-      if (shopParam) {
-        console.log("[LOGIN] Redirecting to Shopify OAuth with shop:", shopParam);
-        const redirectUrl = `/api/auth/shopify?shop=${encodeURIComponent(shopParam)}`;
-        console.log("[LOGIN] Redirect URL:", redirectUrl);
-        window.location.href = redirectUrl;
-        return;
-      }
+    if (isShopifyMode) {
+      console.log("[LOGIN] In Shopify mode - AuthProvider will handle OAuth redirect");
+      return;
     }
   }, [isShopifyMode]);
 

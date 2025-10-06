@@ -37,9 +37,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const isPublicRoute = ['/', '/login', '/register', '/privacy', '/terms', '/support'].includes(window.location.pathname);
       
       if (isShopifyMode && shop) {
-        // Shopify mode: redirect to Shopify OAuth
-        console.log("[AUTH PROVIDER] Redirecting to Shopify OAuth", { hasShop: !!shop });
-        redirectToAuth(shop);
+        // Shopify mode: redirect to Shopify OAuth (this waits for App Bridge to be ready)
+        console.log("[AUTH PROVIDER] Not authenticated in Shopify mode - triggering OAuth redirect", { hasShop: !!shop });
+        
+        // Add small delay to ensure App Bridge has time to initialize
+        setTimeout(() => {
+          console.log("[AUTH PROVIDER] Executing Shopify OAuth redirect");
+          redirectToAuth(shop);
+        }, 500);
       } else if (!isShopifyMode && !isPublicRoute) {
         // Standalone mode: redirect to login page if not on a public route
         console.log("[AUTH PROVIDER] Unauthenticated in standalone mode - redirecting to login");
