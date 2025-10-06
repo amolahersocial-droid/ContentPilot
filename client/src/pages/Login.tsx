@@ -28,7 +28,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const { isShopifyMode } = useMode();
   const { toast } = useToast();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -334,7 +334,7 @@ export default function Login() {
 
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             className="w-full"
             onClick={() => {
               setIsRegisterMode(!isRegisterMode);

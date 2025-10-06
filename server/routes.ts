@@ -67,9 +67,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/shopify", async (req, res) => {
     try {
-      const shop = req.query.shop as string;
+      let shop = req.query.shop as string;
       
       console.log("[SHOPIFY AUTH] Install request received", { 
+        shop,
         hasShop: !!shop,
         queryParams: Object.keys(req.query),
         hasSession: !!req.session
@@ -80,9 +81,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Shop parameter required" });
       }
 
+      // Normalize shop domain - ensure it has .myshopify.com
+      if (!shop.includes('.myshopify.com')) {
+        shop = `${shop}.myshopify.com`;
+        console.log("[SHOPIFY AUTH] Normalized shop domain to:", shop);
+      }
+      
+      // Remove any protocol if present
+      shop = shop.replace(/^https?:\/\//, '');
+      
       // Validate shop domain
       if (!shop.endsWith('.myshopify.com')) {
-        console.error("[SHOPIFY AUTH] ❌ Invalid shop domain");
+        console.error("[SHOPIFY AUTH] ❌ Invalid shop domain:", shop);
         return res.status(400).json({ message: "Invalid shop domain" });
       }
 
@@ -96,6 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const installUrl = getInstallUrl(shop, state);
+      console.log("[SHOPIFY AUTH] ✅ Generated OAuth URL:", installUrl);
       console.log("[SHOPIFY AUTH] ✅ Redirecting to Shopify OAuth");
       
       res.redirect(installUrl);
