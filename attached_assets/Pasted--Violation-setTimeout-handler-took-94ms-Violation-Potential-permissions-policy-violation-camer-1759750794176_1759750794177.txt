@@ -1,0 +1,32 @@
+[Violation] 'setTimeout' handler took 94ms
+[Violation] Potential permissions policy violation: camera is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: web-share is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.Understand this error
+index-BXYonyZV.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+index-BXYonyZV.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+index-BXYonyZV.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-BXYonyZV.js:298 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+index-BXYonyZV.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-BXYonyZV.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+index-BXYonyZV.js:344 [LOGIN] Checking for shop parameter {shop: 'test-store-techronyx.myshopify.com', embedded: '1', isShopifyMode: true}
+index-BXYonyZV.js:344 [LOGIN] Redirecting to Shopify OAuth with shop: test-store-techronyx.myshopify.com
+index-BXYonyZV.js:344 [LOGIN] Redirect URL: /api/auth/shopify?shop=test-store-techronyx.myshopify.com
+index-BXYonyZV.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+index-BXYonyZV.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+index-BXYonyZV.js:48 [QUERY CLIENT] ✅ Added shop parameter
+index-BXYonyZV.js:48 [QUERY FN] Making fetch
+index-BXYonyZV.js:298 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+index-BXYonyZV.js:298 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+index-BXYonyZV.js:298 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+index-BXYonyZV.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+index-BXYonyZV.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: true, …}
+index-BXYonyZV.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+index-BXYonyZV.js:48 [MODE PROVIDER] Updated global mode {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+index-BXYonyZV.js:48 [MODE PROVIDER] Shopify params {hasShop: true, hasHost: true, hasHmac: true, hasIdToken: true}
+index-BXYonyZV.js:48 [MODE PROVIDER] ✅ Host saved to sessionStorage
+[Report Only] Refused to frame 'https://accounts.shopify.com/' because an ancestor violates the following Content Security Policy directive: "frame-ancestors 'self'".
+Understand this error
+chrome-error://chromewebdata/:1 Refused to display 'https://accounts.shopify.com/' in a frame because it set 'X-Frame-Options' to 'deny'.
