@@ -187,28 +187,10 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
           checkAndInit();
         };
 
-        const existingScript = document.querySelector('script[src*="app-bridge.js"]');
-        if (!existingScript) {
-          console.log("[SHOPIFY PROVIDER] Loading App Bridge CDN script...");
-          const script = document.createElement("script");
-          script.src = "https://cdn.shopify.com/shopifycloud/app-bridge.js";
-          script.async = true;
-          
-          // Wait for script to load
-          script.onload = () => {
-            console.log('[SHOPIFY PROVIDER] ✅ App Bridge CDN script loaded');
-            initializeAppBridge();
-          };
-          
-          script.onerror = () => {
-            console.error('[SHOPIFY PROVIDER] ❌ Failed to load App Bridge CDN');
-          };
-          
-          document.head.appendChild(script);
-        } else {
-          console.log("[SHOPIFY PROVIDER] App Bridge CDN script already exists");
-          initializeAppBridge();
-        }
+        // App Bridge is loaded from index.html (first script, no async)
+        // Just wait for it to be ready
+        console.log("[SHOPIFY PROVIDER] App Bridge loaded from HTML - initializing");
+        initializeAppBridge();
       } catch (error) {
         console.error("[Shopify] Failed to initialize App Bridge:", error);
       }
@@ -217,7 +199,7 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
     initializeShopifyAppBridge();
   }, [isShopifyMode]);
 
-  // Redirect to Shopify OAuth using backend endpoint (handles OAuth URL generation)
+  // Redirect to Shopify OAuth using App Bridge (prevents iframe blocking)
   const redirectToAuth = (shop: string) => {
     console.log("[SHOPIFY PROVIDER] redirectToAuth called", { shop, appBridgeReady });
     
@@ -226,13 +208,28 @@ export function ShopifyProvider({ children }: { children: ReactNode }) {
     
     console.log("[SHOPIFY PROVIDER] Redirecting to backend OAuth endpoint:", backendAuthUrl);
     
-    // Always use top-level redirect for OAuth to break out of iframe
-    // This is necessary because Shopify's OAuth page cannot be loaded in an iframe
-    if (window.top) {
-      console.log("[SHOPIFY PROVIDER] Using top-level redirect");
-      window.top.location.href = backendAuthUrl;
-    } else {
-      console.log("[SHOPIFY PROVIDER] Using window redirect");
+    // Use App Bridge redirect if available (prevents SecurityError in iframe)
+    if (window.shopify && appBridgeReady) {
+      try {
+        console.log("[SHOPIFY PROVIDER] Using App Bridge redirect");
+        window.shopify.window.redirect(backendAuthUrl);
+        return;
+      } catch (error) {
+        console.error("[SHOPIFY PROVIDER] App Bridge redirect failed:", error);
+      }
+    }
+    
+    // Fallback: try top-level redirect (may fail in iframe)
+    console.log("[SHOPIFY PROVIDER] App Bridge not ready - attempting top-level redirect");
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.href = backendAuthUrl;
+      } else {
+        window.location.href = backendAuthUrl;
+      }
+    } catch (error) {
+      console.error("[SHOPIFY PROVIDER] Redirect failed:", error);
+      // Last resort: regular redirect
       window.location.href = backendAuthUrl;
     }
   };

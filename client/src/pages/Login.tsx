@@ -83,10 +83,12 @@ export default function Login() {
 
       if (response.ok) {
         const userData = await response.json();
-        // Trigger auth context to refetch user
+        console.log("[LOGIN] Login successful, redirecting to dashboard");
+        // Force full page reload to trigger auth context refresh
         window.location.href = "/dashboard";
       } else {
         const error = await response.json();
+        setIsLoading(false);
         toast({ 
           title: "Login failed", 
           description: error.message || "Invalid credentials",
@@ -94,13 +96,12 @@ export default function Login() {
         });
       }
     } catch (error: any) {
+      setIsLoading(false);
       toast({ 
         title: "Error", 
         description: error.message || "Failed to login",
         variant: "destructive" 
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -116,11 +117,13 @@ export default function Login() {
 
       if (response.ok) {
         const userData = await response.json();
+        console.log("[LOGIN] Registration successful, redirecting to dashboard");
         toast({ title: "Account created!", description: "Registration successful" });
-        // Trigger auth context to refetch user
+        // Force full page reload to trigger auth context refresh
         window.location.href = "/dashboard";
       } else {
         const error = await response.json();
+        setIsLoading(false);
         toast({ 
           title: "Registration failed", 
           description: error.message || "Could not create account",
@@ -128,13 +131,12 @@ export default function Login() {
         });
       }
     } catch (error: any) {
+      setIsLoading(false);
       toast({ 
         title: "Error", 
         description: error.message || "Failed to register",
         variant: "destructive" 
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -1,0 +1,226 @@
+[Violation] 'setTimeout' handler took 81ms
+[Violation] Potential permissions policy violation: camera is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-get is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: web-share is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: otp-credentials is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: publickey-credentials-create is not allowed in this document.Understand this error
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: false, …}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE PROVIDER] Initial state {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] Initializing {isShopifyMode: true, hasShop: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [AUTH PROVIDER] Initializing AuthProvider
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:344 [LOGIN] Checking for shop parameter {shop: 'test-store-techronyx.myshopify.com', embedded: '1', isShopifyMode: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:344 [LOGIN] Redirecting to Shopify OAuth with shop: test-store-techronyx.myshopify.com
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:344 [LOGIN] Redirect URL: /api/auth/shopify?shop=test-store-techronyx.myshopify.com
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [QUERY FN] Executing query {queryKey: Array(1), on401Behavior: 'returnNull'}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [QUERY CLIENT] addShopifyContext called {path: '/api/auth/user', globalAppMode: 'shopify', hasGlobalShop: true, willAddShopParam: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [QUERY CLIENT] ✅ Added shop parameter
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [QUERY FN] Making fetch
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] useEffect - checking if Shopify mode {isShopifyMode: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ Shopify mode detected - initializing App Bridge
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] Fetching Shopify config from /api/shopify/config
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE PROVIDER] useEffect running - re-detecting mode
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE DETECTION] Initializing mode detection {pathname: '/', hasShopParam: true, hasEmbedded: true, isInIframe: true, hasSessionShop: true, …}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE DETECTION] ✅ Shopify mode detected (shop param in URL)
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE PROVIDER] Updated global mode {mode: 'shopify', hasShop: true, globalAppMode: 'shopify', hasGlobalShop: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE PROVIDER] Shopify params {hasShop: true, hasHost: true, hasHmac: true, hasIdToken: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:48 [MODE PROVIDER] ✅ Host saved to sessionStorage
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] Config received {hasApiKey: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] URL params {hasHost: true, hasShop: true, hasHmac: true, hasIdToken: true, hasEmbedded: true}
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ Host saved to sessionStorage
+content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ Shop saved to sessionStorage
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ Host confirmed
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] Adding shopify-api-key meta tag
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ Meta tag added
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] Loading App Bridge CDN script...
+app-bridge.js:1 The script tag loading App Bridge has `async`
+(anonymous) @ app-bridge.js:1
+(anonymous) @ app-bridge.js:1
+(anonymous) @ app-bridge.js:1
+(anonymous) @ app-bridge.js:1Understand this error
+app-bridge.js:1 Uncaught Error: Shopify’s App Bridge must be included as the first <script> tag and must link to Shopify’s CDN. Do not use async, defer or type=module. Aborting.
+(anonymous) @ app-bridge.js:1
+(anonymous) @ app-bridge.js:1
+(anonymous) @ app-bridge.js:1Understand this error
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] ✅ App Bridge CDN script loaded
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] initializeAppBridge called
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] Waiting for App Bridge to initialize...
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] App Bridge not ready yet - retrying in 1s
+index-D8obNC47.js:48  GET https://content-pilot-amolahersocial.replit.app/api/auth/user?shop=test-store-techronyx.myshopify.com 401 (Unauthorized)
+(anonymous) @ index-D8obNC47.js:48
+o @ index-D8obNC47.js:48
+S @ index-D8obNC47.js:48
+start @ index-D8obNC47.js:48
+fetch @ index-D8obNC47.js:48
+Qi @ index-D8obNC47.js:48
+onSubscribe @ index-D8obNC47.js:48
+subscribe @ index-D8obNC47.js:48
+(anonymous) @ index-D8obNC47.js:48
+gx @ index-D8obNC47.js:38
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+qx @ index-D8obNC47.js:40
+j @ index-D8obNC47.js:25
+I @ index-D8obNC47.js:25Understand this error
+index-D8obNC47.js:48 [QUERY FN] Response received {status: 401, statusText: '', ok: false}
+index-D8obNC47.js:48 [QUERY FN] 401 received - returning null (as configured)
+index-D8obNC47.js:298 [AUTH PROVIDER] Initializing AuthProvider
+index-D8obNC47.js:298 [AUTH PROVIDER] Auth state {hasUser: false, isLoading: false}
+index-D8obNC47.js:298 [AUTH PROVIDER] Redirecting to Shopify OAuth {hasShop: true}
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] redirectToAuth called {shop: 'test-store-techronyx.myshopify.com', appBridgeReady: false}
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] Redirecting to backend OAuth endpoint: /api/auth/shopify?shop=test-store-techronyx.myshopify.com
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] Using top-level redirect
+index-D8obNC47.js:298 Unsafe attempt to initiate navigation for frame with origin 'https://admin.shopify.com' from frame with URL 'https://content-pilot-amolahersocial.replit.app/?embedded=1&hmac=e91f124002d21f5b3264b69d57cce6c9170054073df803efbfc19a918c80e518&host=YWRtaW4uc2hvcGlmeS5jb20vc3RvcmUvdGVzdC1zdG9yZS10ZWNocm9ueXg&id_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczpcL1wvdGVzdC1zdG9yZS10ZWNocm9ueXgubXlzaG9waWZ5LmNvbVwvYWRtaW4iLCJkZXN0IjoiaHR0cHM6XC9cL3Rlc3Qtc3RvcmUtdGVjaHJvbnl4Lm15c2hvcGlmeS5jb20iLCJhdWQiOiIyNDkxOTRlNGYzMWE3ZWFjMmE4ZTkwZTc4NWViZTc4ZSIsInN1YiI6IjEyMTI0NTkyNTU2MCIsImV4cCI6MTc1OTc1MDQxNCwibmJmIjoxNzU5NzUwMzU0LCJpYXQiOjE3NTk3NTAzNTQsImp0aSI6IjAyYzlkYjQ0LTA3YWUtNDQ1MC05YjNkLWExY2IzYjBiZDhmNiIsInNpZCI6IjNkNzIwMDY3LTRhY2MtNGI1MS1iOGU2LWQzNDYzZDU4ZmUyOCIsInNpZyI6IjAxYjc3NWRmMjQ5OTFlMmNhZGQ2NDY5MWY5MTcxODRhNWE4YzQ1NjcyMjgzOGZkMDQ2MzZhYjA5MGEwNzVkNjUifQ.3EBNlgdD23W55gRT3uHO6lqwSewi69Qm6wiZGmwgtek&locale=en&session=314d281a9ea45d4f6fa9cef7a1f5ae69cc04a0bbafadbfa62c0f12698b547648&shop=test-store-techronyx.myshopify.com&timestamp=1759750354'. The frame attempting navigation is targeting its top-level window, but is neither same-origin with its target nor has it received a user gesture. See https://www.chromestatus.com/feature/5851021045661696.
+
+o @ index-D8obNC47.js:298
+(anonymous) @ index-D8obNC47.js:298
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+(anonymous) @ index-D8obNC47.js:40
+setTimeout
+s @ index-D8obNC47.js:48
+a @ index-D8obNC47.js:48
+batch @ index-D8obNC47.js:48
+lr @ index-D8obNC47.js:48
+setData @ index-D8obNC47.js:48
+onSuccess @ index-D8obNC47.js:48
+h @ index-D8obNC47.js:48
+Promise.then
+S @ index-D8obNC47.js:48
+start @ index-D8obNC47.js:48
+fetch @ index-D8obNC47.js:48
+Qi @ index-D8obNC47.js:48
+onSubscribe @ index-D8obNC47.js:48
+subscribe @ index-D8obNC47.js:48
+(anonymous) @ index-D8obNC47.js:48
+gx @ index-D8obNC47.js:38
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+qx @ index-D8obNC47.js:40
+j @ index-D8obNC47.js:25
+I @ index-D8obNC47.js:25Understand this error
+index-D8obNC47.js:40 SecurityError: Failed to set a named property 'href' on 'Location': The current window does not have permission to navigate the target frame to '/api/auth/shopify?shop=test-store-techronyx.myshopify.com'.
+    at content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298:63274
+    at Vc (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:24263)
+    at Io (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:42318)
+    at EC (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:41166)
+    at ks (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:40215)
+    at ng (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:36825)
+    at vs (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:38:3274)
+    at content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:34207
+rf @ index-D8obNC47.js:40
+Ax.n.callback @ index-D8obNC47.js:40
+Fm @ index-D8obNC47.js:38
+Jm @ index-D8obNC47.js:40
+Qx @ index-D8obNC47.js:40
+SC @ index-D8obNC47.js:40
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+(anonymous) @ index-D8obNC47.js:40
+setTimeout
+s @ index-D8obNC47.js:48
+a @ index-D8obNC47.js:48
+batch @ index-D8obNC47.js:48
+lr @ index-D8obNC47.js:48
+setData @ index-D8obNC47.js:48
+onSuccess @ index-D8obNC47.js:48
+h @ index-D8obNC47.js:48
+Promise.then
+S @ index-D8obNC47.js:48
+start @ index-D8obNC47.js:48
+fetch @ index-D8obNC47.js:48
+Qi @ index-D8obNC47.js:48
+onSubscribe @ index-D8obNC47.js:48
+subscribe @ index-D8obNC47.js:48
+(anonymous) @ index-D8obNC47.js:48
+gx @ index-D8obNC47.js:38
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+qx @ index-D8obNC47.js:40
+j @ index-D8obNC47.js:25
+I @ index-D8obNC47.js:25Understand this error
+index-D8obNC47.js:298 Uncaught SecurityError: Failed to set a named property 'href' on 'Location': The current window does not have permission to navigate the target frame to '/api/auth/shopify?shop=test-store-techronyx.myshopify.com'.
+    at content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:298:63274
+    at Vc (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:24263)
+    at Io (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:42318)
+    at EC (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:41166)
+    at ks (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:40215)
+    at ng (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:36825)
+    at vs (content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:38:3274)
+    at content-pilot-amolahersocial.replit.app/assets/index-D8obNC47.js:40:34207
+(anonymous) @ index-D8obNC47.js:298
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+(anonymous) @ index-D8obNC47.js:40
+setTimeout
+s @ index-D8obNC47.js:48
+a @ index-D8obNC47.js:48
+batch @ index-D8obNC47.js:48
+lr @ index-D8obNC47.js:48
+setData @ index-D8obNC47.js:48
+onSuccess @ index-D8obNC47.js:48
+h @ index-D8obNC47.js:48
+Promise.then
+S @ index-D8obNC47.js:48
+start @ index-D8obNC47.js:48
+fetch @ index-D8obNC47.js:48
+Qi @ index-D8obNC47.js:48
+onSubscribe @ index-D8obNC47.js:48
+subscribe @ index-D8obNC47.js:48
+(anonymous) @ index-D8obNC47.js:48
+gx @ index-D8obNC47.js:38
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+qx @ index-D8obNC47.js:40
+j @ index-D8obNC47.js:25
+I @ index-D8obNC47.js:25Understand this error
+index-D8obNC47.js:298 [SHOPIFY PROVIDER] ⚠️ App Bridge failed to initialize after timeout
+(anonymous) @ index-D8obNC47.js:298
+setTimeout
+(anonymous) @ index-D8obNC47.js:298
+x @ index-D8obNC47.js:298
+g.onload @ index-D8obNC47.js:298
+script
+a @ index-D8obNC47.js:298
+await in a
+(anonymous) @ index-D8obNC47.js:298
+Vc @ index-D8obNC47.js:40
+Io @ index-D8obNC47.js:40
+ng @ index-D8obNC47.js:40
+vs @ index-D8obNC47.js:38
+EC @ index-D8obNC47.js:40
+ks @ index-D8obNC47.js:40
+qx @ index-D8obNC47.js:40
+j @ index-D8obNC47.js:25
+I @ index-D8obNC47.js:25Understand this warning
+[Report Only] Refused to frame 'https://accounts.shopify.com/' because an ancestor violates the following Content Security Policy directive: "frame-ancestors 'self'".
+Understand this error
+chrome-error://chromewebdata/:1 Refused to display 'https://accounts.shopify.com/' in a frame because it set 'X-Frame-Options' to 'deny'.Understand this error
