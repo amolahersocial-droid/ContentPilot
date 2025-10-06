@@ -190,7 +190,7 @@ function Router() {
         )}
       </Route>
       <Route path="/">
-        {() => <Redirect to="/dashboard" />}
+        {() => user ? <Redirect to="/dashboard" /> : <Login />}
       </Route>
       <Route component={NotFound} />
     </Switch>
